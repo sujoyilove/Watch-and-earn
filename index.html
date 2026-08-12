@@ -3,13 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Watch & Earn</title>
-  <script src='//libtl.com/sdk.js' data-zone='11563642' data-sdk='show_11563642'></script>
-  
+
+  <!-- Monetag SDK -->
+  <script src="//libtl.com/sdk.js"
+          data-zone="11563642"
+          data-sdk="show_11563642"></script>
+
   <style>
     body {
       margin: 0;
-      padding: 20px 15px;
+      padding: 40px 15px;
       font-family: Arial, sans-serif;
       text-align: center;
       background: #f5f5f5;
@@ -19,82 +24,51 @@
       max-width: 400px;
       margin: auto;
       background: white;
-      padding: 25px 20px;
+      padding: 30px 20px;
       border-radius: 18px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     }
 
     h1 {
-      margin-bottom: 15px;
-      font-size: 24px;
+      font-size: 28px;
+      margin-bottom: 25px;
     }
 
     #balance {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: bold;
-      margin: 15px 0;
+      margin: 25px 0;
       color: #16803c;
     }
 
-    .btn {
+    #watchBtn {
       width: 100%;
       border: none;
-      padding: 14px;
-      font-size: 16px;
+      padding: 15px;
+      font-size: 18px;
       font-weight: bold;
       border-radius: 10px;
+      background: #16803c;
+      color: white;
       cursor: pointer;
-      margin-top: 10px;
-      box-sizing: border-box;
     }
 
-    .btn-watch { background: #16803c; color: white; }
-    .btn-checkin { background: #e67e22; color: white; }
-    .btn-withdraw { background: #2980b9; color: white; }
-    .btn-refer { background: #8e44ad; color: white; }
-
-    .btn:disabled {
-      background: #999 !important;
+    #watchBtn:disabled {
+      background: #999;
       cursor: not-allowed;
     }
 
     #message {
-      margin-top: 15px;
-      font-size: 15px;
-      min-height: 22px;
-      font-weight: bold;
-    }
-
-    .section-box {
       margin-top: 20px;
-      padding: 15px;
-      background: #fafafa;
-      border: 1px solid #eee;
-      border-radius: 10px;
-      text-align: left;
-    }
-
-    .section-box h3 {
-      margin-top: 0;
       font-size: 16px;
+      min-height: 25px;
     }
 
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
-
-    .ref-link-box {
-      background: #eef2f5;
-      padding: 8px;
-      font-size: 12px;
-      word-break: break-all;
-      border-radius: 5px;
-      margin-top: 5px;
+    .notice {
+      margin-top: 25px;
+      font-size: 13px;
+      color: #777;
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -109,165 +83,88 @@
       Balance: ₹0.00
     </div>
 
-    <button id="watchBtn" class="btn btn-watch" onclick="watchAd()">
-      ▶️ WATCH AD (Earn ₹3.00)
+    <button id="watchBtn" onclick="watchAd()">
+      ▶️ WATCH AD
     </button>
 
-    <button id="checkinBtn" class="btn btn-checkin" onclick="dailyCheckIn()">
-      📅 DAILY CHECK-IN (Earn ₹15.00)
-    </button>
-
-    <div id="message"></div>
-
-    <div class="section-box">
-      <h3>👥 Refer & Earn</h3>
-      <p style="font-size: 13px; margin: 5px 0;">Share your link and get ₹25.00 per referral!</p>
-      <div class="ref-link-box" id="refLink">Loading...</div>
-      <button class="btn btn-refer" onclick="copyReferLink()">📋 Copy Refer Link</button>
-      <p style="font-size: 12px; margin-top: 8px;">Total Refers: <b id="refCount">0</b></p>
+    <div id="message">
+      Watch an ad to continue.
     </div>
 
-    <div class="section-box">
-      <h3>🏧 Withdraw Rewards</h3>
-      <p style="font-size: 12px; color: #666; margin: 0 0 10px 0;">Minimum Withdrawal: ₹250.00</p>
-      
-      <select id="payMethod">
-        <option value="UPI">UPI / GPay / PhonePe</option>
-        <option value="Paytm">Paytm Number</option>
-      </select>
-
-      <input type="text" id="payDetail" placeholder="Enter UPI ID or Phone Number">
-      <input type="number" id="withdrawAmount" placeholder="Enter Amount (Min ₹250)">
-      
-      <button class="btn btn-withdraw" onclick="processWithdraw()">Request Withdrawal</button>
+    <div class="notice">
+      Rewards are subject to successful ad completion and platform verification.
     </div>
 
   </div>
 
   <script>
 
-    let balance = parseFloat(localStorage.getItem("userBalance")) || 0.00;
-    let lastCheckIn = localStorage.getItem("lastCheckIn") || "";
-    let referCount = parseInt(localStorage.getItem("referCount")) || 0;
+    let balance =
+      parseFloat(localStorage.getItem("userBalance")) || 0;
 
-    let userRefCode = localStorage.getItem("userRefCode");
-    if (!userRefCode) {
-      userRefCode = "REF" + Math.floor(100000 + Math.random() * 900000);
-      localStorage.setItem("userRefCode", userRefCode);
+    const watchBtn =
+      document.getElementById("watchBtn");
+
+    const message =
+      document.getElementById("message");
+
+    function updateBalance() {
+
+      document.getElementById("balance").innerText =
+        "Balance: ₹" + balance.toFixed(2);
+
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const refParam = urlParams.get('ref');
-    if (refParam && !localStorage.getItem("hasReferred")) {
-      balance += 25.00;
-      localStorage.setItem("userBalance", balance);
-      localStorage.setItem("hasReferred", "true");
-      referCount += 1;
-      localStorage.setItem("referCount", referCount);
-    }
+    updateBalance();
 
-    updateUI();
 
-    function updateUI() {
-      document.getElementById("balance").innerText = "Balance: ₹" + balance.toFixed(2);
-      document.getElementById("refCount").innerText = referCount;
-      document.getElementById("refLink").innerText = window.location.origin + window.location.pathname + "?ref=" + userRefCode;
-      
-      const today = new Date().toDateString();
-      if (lastCheckIn === today) {
-        document.getElementById("checkinBtn").disabled = true;
-        document.getElementById("checkinBtn").innerText = "✅ CHECKED IN TODAY";
-      }
-    }
+    async function watchAd() {
 
-    // UPDATE: Watch Ad Logic (Immediate play, 17s delay for balance)
-    function watchAd() {
-      const button = document.getElementById("watchBtn");
-      const message = document.getElementById("message");
+      watchBtn.disabled = true;
 
-      // 1. Immediately call the ad
+      message.innerText =
+        "⏳ Opening advertisement...";
+
       try {
-        show_11563642();
-      } catch(e) {
-        console.error("Ad failed", e);
+
+        /*
+          Monetag rewarded ad.
+
+          The SDK must be responsible for the
+          actual advertisement experience.
+        */
+
+        if (typeof show_11563642 !== "function") {
+
+          throw new Error("Monetag SDK not loaded");
+
+        }
+
+        await show_11563642();
+
+        /*
+          IMPORTANT:
+          Do NOT automatically add ₹3 here.
+
+          A real reward should only be credited
+          after a verified reward/completion signal
+          from the ad platform/backend.
+        */
+
+        message.innerText =
+          "✅ Ad finished. Reward verification pending.";
+
+      } catch (error) {
+
+        console.error(error);
+
+        message.innerText =
+          "❌ Advertisement could not be completed.";
+
       }
 
-      button.disabled = true;
-      message.innerText = "⏳ Watching ad... Reward will be added in 17s!";
+      watchBtn.disabled = false;
 
-      // 2. Add reward after 17 seconds
-      setTimeout(() => {
-        balance += 3.00;
-        localStorage.setItem("userBalance", balance);
-        updateUI();
-        message.innerText = "✅ Reward added! You earned ₹3.00";
-        button.disabled = false;
-      }, 17000);
-    }
-
-    function dailyCheckIn() {
-      const today = new Date().toDateString();
-      if (lastCheckIn !== today) {
-        balance += 15.00;
-        lastCheckIn = today;
-        localStorage.setItem("userBalance", balance);
-        localStorage.setItem("lastCheckIn", lastCheckIn);
-        
-        updateUI();
-        document.getElementById("message").innerText = "🎉 Daily Check-in Success! Received ₹15.00";
-      }
-    }
-
-    function copyReferLink() {
-      const linkText = document.getElementById("refLink").innerText;
-      navigator.clipboard.writeText(linkText);
-      document.getElementById("message").innerText = "📋 Refer link copied!";
-    }
-
-    function processWithdraw() {
-      const method = document.getElementById("payMethod").value;
-      const detail = document.getElementById("payDetail").value.trim();
-      const amount = parseFloat(document.getElementById("withdrawAmount").value);
-      const message = document.getElementById("message");
-
-      if (!detail) {
-        message.innerText = "❌ Please enter Payment Details!";
-        return;
-      }
-
-      if (isNaN(amount) || amount < 250) {
-        message.innerText = "❌ Minimum withdrawal amount is ₹250!";
-        return;
-      }
-
-      if (amount > balance) {
-        message.innerText = "❌ Insufficient balance!";
-        return;
-      }
-
-      message.innerText = "⏳ Processing Request...";
-
-      const text = `🚨 *NEW WITHDRAWAL REQUEST* 🚨\n\n` +
-                   `👤 *User Ref:* \`${userRefCode}\`\n` +
-                   `💰 *Amount:* ₹${amount}\n` +
-                   `💳 *Method:* ${method}\n` +
-                   `📌 *Details:* \`${detail}\``;
-
-      const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(text)}&parse_mode=Markdown`;
-
-      fetch(telegramUrl)
-        .then(response => {
-          balance -= amount;
-          localStorage.setItem("userBalance", balance);
-          updateUI();
-
-          message.innerText = `✅ Request sent! ₹${amount} via ${method}`;
-          document.getElementById("payDetail").value = "";
-          document.getElementById("withdrawAmount").value = "";
-        })
-        .catch(err => {
-          message.innerText = "❌ Something went wrong. Try again!";
-        });
     }
 
   </script>
