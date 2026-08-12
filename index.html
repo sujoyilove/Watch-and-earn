@@ -41,19 +41,27 @@
       margin: 25px 0;
     }
 
-    #watchBtn {
+    .btn {
       width: 100%;
       padding: 15px;
       border: none;
       border-radius: 10px;
-      background: #16803c;
       color: white;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: bold;
       cursor: pointer;
+      margin-top: 12px;
     }
 
-    #watchBtn:disabled {
+    .watch {
+      background: #16803c;
+    }
+
+    .checkin {
+      background: #e67e22;
+    }
+
+    .btn:disabled {
       background: #999;
       cursor: not-allowed;
     }
@@ -69,154 +77,264 @@
       margin-top: 25px;
       font-size: 13px;
       color: #777;
-      line-height: 1.5;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
+<div class="container">
 
-    <h1>💰 Watch & Earn</h1>
+  <h1>💰 Watch & Earn</h1>
 
-    <div id="balance">
-      Balance: ₹0.00
-    </div>
-
-    <button id="watchBtn" onclick="watchAd()">
-      ▶️ WATCH AD
-    </button>
-
-    <div id="message">
-      Watch an ad and earn!
-    </div>
-
-    <div class="info">
-      Rewards are credited only when a valid rewarded event is received.
-    </div>
-
+  <div id="balance">
+    Balance: ₹0.00
   </div>
 
-  <script>
+  <button
+    id="watchBtn"
+    class="btn watch"
+    onclick="watchAd()">
+    ▶️ WATCH AD
+  </button>
 
-    let balance =
-      parseFloat(localStorage.getItem("userBalance")) || 0;
+  <button
+    id="checkinBtn"
+    class="btn checkin"
+    onclick="dailyCheckIn()">
+    📅 DAILY CHECK-IN
+  </button>
 
-    const watchBtn =
-      document.getElementById("watchBtn");
+  <div id="message">
+    Watch ads and complete daily check-in to earn rewards.
+  </div>
 
-    const message =
-      document.getElementById("message");
+  <div class="info">
+    Daily check-in can be claimed once per day.
+  </div>
+
+</div>
 
 
-    function updateBalance() {
+<script>
 
-      document.getElementById("balance").innerText =
-        "Balance: ₹" + balance.toFixed(2);
+  /* =========================
+     BALANCE
+  ========================= */
+
+  let balance =
+    parseFloat(localStorage.getItem("userBalance")) || 0;
+
+
+  let lastCheckIn =
+    localStorage.getItem("lastCheckIn") || "";
+
+
+  const watchBtn =
+    document.getElementById("watchBtn");
+
+  const checkinBtn =
+    document.getElementById("checkinBtn");
+
+  const message =
+    document.getElementById("message");
+
+
+  function updateBalance() {
+
+    document.getElementById("balance").innerText =
+      "Balance: ₹" + balance.toFixed(2);
+
+  }
+
+
+  updateBalance();
+
+
+  /* =========================
+     DAILY CHECK-IN STATUS
+  ========================= */
+
+  function updateCheckInButton() {
+
+    const today =
+      new Date().toDateString();
+
+    if (lastCheckIn === today) {
+
+      checkinBtn.disabled = true;
+
+      checkinBtn.innerText =
+        "✅ CHECKED IN TODAY";
+
+    } else {
+
+      checkinBtn.disabled = false;
+
+      checkinBtn.innerText =
+        "📅 DAILY CHECK-IN";
 
     }
 
-
-    updateBalance();
-
-
-    async function watchAd() {
-
-      watchBtn.disabled = true;
-
-      message.innerText =
-        "⏳ Opening advertisement...";
+  }
 
 
-      try {
-
-        // Check Monetag SDK
-        if (typeof show_11563642 !== "function") {
-
-          throw new Error("Monetag SDK not loaded");
-
-        }
+  updateCheckInButton();
 
 
-        // Open rewarded advertisement
-        const event = await show_11563642({
+  /* =========================
+     WATCH AD
+  ========================= */
 
-          ymid: "user-" + Date.now(),
+  async function watchAd() {
 
-          requestVar: "watch_ad"
+    watchBtn.disabled = true;
 
-        });
+    message.innerText =
+      "⏳ Opening advertisement...";
 
 
-        // Show event in browser console for testing
-        console.log(
-          "Monetag reward event:",
-          event
+    try {
+
+      if (
+        typeof show_11563642 !== "function"
+      ) {
+
+        throw new Error(
+          "Monetag SDK not loaded"
         );
-
-
-        /*
-          Reward only when Monetag reports
-          a valued reward event.
-        */
-
-        if (
-          event &&
-          event.reward_event_type === "valued"
-        ) {
-
-          /*
-            TEST REWARD AMOUNT.
-
-            ₹3 is only a test value here.
-            Real payout should later be calculated
-            from verified Monetag revenue.
-          */
-
-          balance += 3.00;
-
-
-          localStorage.setItem(
-            "userBalance",
-            balance.toFixed(2)
-          );
-
-
-          updateBalance();
-
-
-          message.innerText =
-            "✅ Reward confirmed! ₹3.00 added.";
-
-
-        } else {
-
-          message.innerText =
-            "ℹ️ Ad finished, but no verified reward was received.";
-
-        }
-
-
-      } catch (error) {
-
-        console.error(
-          "Monetag error:",
-          error
-        );
-
-
-        message.innerText =
-          "❌ Advertisement could not be completed.";
 
       }
 
 
-      watchBtn.disabled = false;
+      const event =
+        await show_11563642({
+
+          ymid:
+            "user-" + Date.now(),
+
+          requestVar:
+            "watch_ad"
+
+        });
+
+
+      console.log(
+        "Monetag reward event:",
+        event
+      );
+
+
+      if (
+        event &&
+        event.reward_event_type === "valued"
+      ) {
+
+        /*
+          TEST REWARD.
+
+          This ₹3 value is only a demo
+          until a secure server-side
+          reward system is implemented.
+        */
+
+        balance += 3.00;
+
+
+        localStorage.setItem(
+          "userBalance",
+          balance.toFixed(2)
+        );
+
+
+        updateBalance();
+
+
+        message.innerText =
+          "✅ Ad reward confirmed! ₹3.00 added.";
+
+      } else {
+
+        message.innerText =
+          "ℹ️ Ad finished, but no verified reward was received.";
+
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        "Monetag error:",
+        error
+      );
+
+
+      message.innerText =
+        "❌ Advertisement could not be completed.";
 
     }
 
-  </script>
+
+    watchBtn.disabled = false;
+
+  }
+
+
+  /* =========================
+     DAILY CHECK-IN
+  ========================= */
+
+  function dailyCheckIn() {
+
+    const today =
+      new Date().toDateString();
+
+
+    if (lastCheckIn === today) {
+
+      message.innerText =
+        "ℹ️ You already checked in today.";
+
+      return;
+
+    }
+
+
+    /*
+      TEST REWARD ONLY.
+      Daily reward = ₹15.
+    */
+
+    balance += 15.00;
+
+
+    lastCheckIn =
+      today;
+
+
+    localStorage.setItem(
+      "userBalance",
+      balance.toFixed(2)
+    );
+
+
+    localStorage.setItem(
+      "lastCheckIn",
+      lastCheckIn
+    );
+
+
+    updateBalance();
+
+    updateCheckInButton();
+
+
+    message.innerText =
+      "🎉 Daily Check-in complete! ₹15.00 added.";
+
+  }
+
+</script>
 
 </body>
 </html>
