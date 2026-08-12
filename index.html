@@ -91,7 +91,9 @@
 
   <script>
 
-    let balance = 0;
+    // ব্রাউজারে আগে সেভ থাকা ব্যালেন্স লোড করা
+    let balance = parseFloat(localStorage.getItem("userBalance")) || 0;
+    document.getElementById("balance").innerText = "Balance: ₹" + balance.toFixed(2);
 
     function watchAd() {
       const button = document.getElementById("watchBtn");
@@ -100,8 +102,10 @@
       button.disabled = true;
       message.innerText = "⏳ Loading Ad...";
 
-      // ৩ টাকা ব্যালেন্স যোগ করার লজিক
+      // ৩ টাকা যোগ করা এবং LocalStorage এ সেভ করা
       balance += 3.00;
+      localStorage.setItem("userBalance", balance);
+      
       document.getElementById("balance").innerText = "Balance: ₹" + balance.toFixed(2);
       message.innerText = "✅ Reward added! You earned ₹3.00";
 
@@ -116,7 +120,6 @@
         button.disabled = false;
       }
 
-      // ৫ সেকেন্ড পর বাটন আবার কাজ করবে
       setTimeout(() => {
         button.disabled = false;
       }, 5000);
