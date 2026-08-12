@@ -84,7 +84,7 @@
     </div>
 
     <div class="info">
-      Watch full ad and click continue to claim reward.
+      Watch ad and get instant rewards.
     </div>
 
   </div>
@@ -101,17 +101,22 @@
       message.innerText = "⏳ Loading Ad...";
 
       // Monetag Ad Call
-      show_11563642().then(() => {
-          // অ্যাড দেখা এবং Continue করার পরেই কেবল এই কোড কাজ করবে
-          balance += 0.10;
-          document.getElementById("balance").innerText = "Balance: ₹" + balance.toFixed(2);
-          message.innerText = "✅ Reward added! You earned ₹0.10";
-          button.disabled = false;
-      }).catch((err) => {
-          // অ্যাড ক্লোজ করে দিলে বা কোনো সমস্যা হলে
-          message.innerText = "❌ Ad was not completed properly.";
-          button.disabled = false;
-      });
+      try {
+        show_11563642().then(() => {
+          rewardUser();
+        }).catch(() => {
+          rewardUser();
+        });
+      } catch(e) {
+        rewardUser();
+      }
+
+      function rewardUser() {
+        balance += 0.10;
+        document.getElementById("balance").innerText = "Balance: ₹" + balance.toFixed(2);
+        message.innerText = "✅ Reward added! You earned ₹0.10";
+        button.disabled = false;
+      }
     }
     
   </script>
