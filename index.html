@@ -84,7 +84,7 @@
     </div>
 
     <div class="info">
-      Complete the demo timer to receive a test reward.
+      Watch full ad and click continue to claim reward.
     </div>
 
   </div>
@@ -94,36 +94,24 @@
     let balance = 0;
 
     function watchAd() {
+      const button = document.getElementById("watchBtn");
+      const message = document.getElementById("message");
 
-      // Rewarded interstitial
+      button.disabled = true;
+      message.innerText = "⏳ Loading Ad...";
+
+      // Monetag Ad Call
       show_11563642().then(() => {
-
-        const button = document.getElementById("watchBtn");
-        const message = document.getElementById("message");
-
-        button.disabled = true;
-
-        let seconds = 10;
-        message.innerText = "📺 Ad playing... " + seconds;
-
-        const timer = setInterval(function () {
-
-          seconds--;
-
-          if (seconds > 0) {
-            message.innerText = "📺 Ad playing... " + seconds;
-          } else {
-            clearInterval(timer);
-            balance += 0.10;
-            document.getElementById("balance").innerText = "Balance: ₹" + balance.toFixed(2);
-            message.innerText = "✅ Demo reward added! You earned ₹0.10";
-            button.disabled = false;
-          }
-
-        }, 1000);
-
+          // অ্যাড দেখা এবং Continue করার পরেই কেবল এই কোড কাজ করবে
+          balance += 0.10;
+          document.getElementById("balance").innerText = "Balance: ₹" + balance.toFixed(2);
+          message.innerText = "✅ Reward added! You earned ₹0.10";
+          button.disabled = false;
+      }).catch((err) => {
+          // অ্যাড ক্লোজ করে দিলে বা কোনো সমস্যা হলে
+          message.innerText = "❌ Ad was not completed properly.";
+          button.disabled = false;
       });
-
     }
     
   </script>
