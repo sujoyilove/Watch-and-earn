@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Watch & Earn</title>
-<script src='//libtl.com/sdk.js' data-zone='11563642' data-sdk='show_11563642'></script>
+  <script src='//libtl.com/sdk.js' data-zone='11563642' data-sdk='show_11563642'></script>
+  
   <style>
     body {
       margin: 0;
@@ -94,51 +95,36 @@
 
     function watchAd() {
 
-// Rewarded interstitial
+      // Rewarded interstitial
+      show_11563642().then(() => {
 
-show_11563642().then(() => {
-    // You need to add your user reward function here, which will be executed after the user watches the ad.
-    // For more details, please refer to the detailed instructions.
-    
+        const button = document.getElementById("watchBtn");
+        const message = document.getElementById("message");
 
- const button = document.getElementById("watchBtn");
-      const message = document.getElementById("message");
+        button.disabled = true;
 
-      button.disabled = true;
+        let seconds = 10;
+        message.innerText = "📺 Ad playing... " + seconds;
 
-      let seconds = 10;
+        const timer = setInterval(function () {
 
-      message.innerText = "📺 Ad playing... " + seconds;
+          seconds--;
 
-      const timer = setInterval(function () {
+          if (seconds > 0) {
+            message.innerText = "📺 Ad playing... " + seconds;
+          } else {
+            clearInterval(timer);
+            balance += 0.10;
+            document.getElementById("balance").innerText = "Balance: ₹" + balance.toFixed(2);
+            message.innerText = "✅ Demo reward added! You earned ₹0.10";
+            button.disabled = false;
+          }
 
-        seconds--;
+        }, 1000);
 
-        if (seconds > 0) {
-
-          message.innerText =
-            "📺 Ad playing... " + seconds;
-
-        } else {
-
-          clearInterval(timer);
-
-          balance += 0.10;
-
-          document.getElementById("balance").innerText =
-            "Balance: ₹" + balance.toFixed(2);
-
-          message.innerText =
-            "✅ Demo reward added! You earned ₹0.10";
-
-          button.disabled = false;
-
-        }
-
-      }, 1000);
+      });
 
     }
-});
     
   </script>
 
