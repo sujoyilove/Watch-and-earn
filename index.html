@@ -94,7 +94,14 @@
 
     function watchAd() {
 
-      const button = document.getElementById("watchBtn");
+// Rewarded interstitial
+
+show_11563642().then(() => {
+    // You need to add your user reward function here, which will be executed after the user watches the ad.
+    // For more details, please refer to the detailed instructions.
+    
+
+ const button = document.getElementById("watchBtn");
       const message = document.getElementById("message");
 
       button.disabled = true;
@@ -131,7 +138,8 @@
       }, 1000);
 
     }
-
+});
+    
   </script>
 
 </body>
