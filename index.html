@@ -6,7 +6,6 @@
 
   <title>Watch & Earn</title>
 
-  <!-- Monetag SDK -->
   <script src="//libtl.com/sdk.js"
           data-zone="11563642"
           data-sdk="show_11563642"></script>
@@ -31,143 +30,125 @@
 
     h1 {
       font-size: 28px;
-      margin-bottom: 25px;
     }
 
     #balance {
       font-size: 26px;
       font-weight: bold;
-      margin: 25px 0;
       color: #16803c;
+      margin: 25px 0;
     }
 
     #watchBtn {
       width: 100%;
-      border: none;
       padding: 15px;
-      font-size: 18px;
-      font-weight: bold;
+      border: none;
       border-radius: 10px;
       background: #16803c;
       color: white;
-      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
     }
 
     #watchBtn:disabled {
       background: #999;
-      cursor: not-allowed;
     }
 
     #message {
       margin-top: 20px;
-      font-size: 16px;
       min-height: 25px;
-    }
-
-    .notice {
-      margin-top: 25px;
-      font-size: 13px;
-      color: #777;
-      line-height: 1.5;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
+<div class="container">
 
-    <h1>💰 Watch & Earn</h1>
+  <h1>💰 Watch & Earn</h1>
 
-    <div id="balance">
-      Balance: ₹0.00
-    </div>
-
-    <button id="watchBtn" onclick="watchAd()">
-      ▶️ WATCH AD
-    </button>
-
-    <div id="message">
-      Watch an ad to continue.
-    </div>
-
-    <div class="notice">
-      Rewards are subject to successful ad completion and platform verification.
-    </div>
-
+  <div id="balance">
+    Balance: ₹0.00
   </div>
 
-  <script>
+  <button id="watchBtn" onclick="watchAd()">
+    ▶️ WATCH AD
+  </button>
 
-    let balance =
-      parseFloat(localStorage.getItem("userBalance")) || 0;
+  <div id="message">
+    Watch an ad and earn!
+  </div>
 
-    const watchBtn =
-      document.getElementById("watchBtn");
+</div>
 
-    const message =
-      document.getElementById("message");
+<script>
 
-    function updateBalance() {
+let balance =
+  parseFloat(localStorage.getItem("userBalance")) || 0;
 
-      document.getElementById("balance").innerText =
-        "Balance: ₹" + balance.toFixed(2);
+const watchBtn =
+  document.getElementById("watchBtn");
 
+const message =
+  document.getElementById("message");
+
+function updateBalance() {
+
+  document.getElementById("balance").innerText =
+    "Balance: ₹" + balance.toFixed(2);
+
+}
+
+updateBalance();
+
+
+async function watchAd() {
+
+  watchBtn.disabled = true;
+
+  message.innerText =
+    "⏳ Opening ad...";
+
+  try {
+
+    if (typeof show_11563642 !== "function") {
+      throw new Error("SDK not loaded");
     }
+
+    await show_11563642();
+
+    /*
+      TEST REWARD ONLY.
+      This proves that the ad flow can return
+      to your page and update the balance.
+    */
+
+    balance += 0.10;
+
+    localStorage.setItem(
+      "userBalance",
+      balance.toFixed(2)
+    );
 
     updateBalance();
 
+    message.innerText =
+      "✅ Test reward added: ₹0.10";
 
-    async function watchAd() {
+  } catch (error) {
 
-      watchBtn.disabled = true;
+    console.error(error);
 
-      message.innerText =
-        "⏳ Opening advertisement...";
+    message.innerText =
+      "❌ Ad could not be completed.";
 
-      try {
+  }
 
-        /*
-          Monetag rewarded ad.
+  watchBtn.disabled = false;
 
-          The SDK must be responsible for the
-          actual advertisement experience.
-        */
+}
 
-        if (typeof show_11563642 !== "function") {
-
-          throw new Error("Monetag SDK not loaded");
-
-        }
-
-        await show_11563642();
-
-        /*
-          IMPORTANT:
-          Do NOT automatically add ₹3 here.
-
-          A real reward should only be credited
-          after a verified reward/completion signal
-          from the ad platform/backend.
-        */
-
-        message.innerText =
-          "✅ Ad finished. Reward verification pending.";
-
-      } catch (error) {
-
-        console.error(error);
-
-        message.innerText =
-          "❌ Advertisement could not be completed.";
-
-      }
-
-      watchBtn.disabled = false;
-
-    }
-
-  </script>
+</script>
 
 </body>
 </html>
