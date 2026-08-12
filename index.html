@@ -6,6 +6,7 @@
 
   <title>Watch & Earn</title>
 
+  <!-- Monetag SDK -->
   <script src="//libtl.com/sdk.js"
           data-zone="11563642"
           data-sdk="show_11563642"></script>
@@ -30,6 +31,7 @@
 
     h1 {
       font-size: 28px;
+      margin-bottom: 20px;
     }
 
     #balance {
@@ -48,107 +50,173 @@
       color: white;
       font-size: 18px;
       font-weight: bold;
+      cursor: pointer;
     }
 
     #watchBtn:disabled {
       background: #999;
+      cursor: not-allowed;
     }
 
     #message {
       margin-top: 20px;
       min-height: 25px;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .info {
+      margin-top: 25px;
+      font-size: 13px;
+      color: #777;
+      line-height: 1.5;
     }
   </style>
 </head>
 
 <body>
 
-<div class="container">
+  <div class="container">
 
-  <h1>💰 Watch & Earn</h1>
+    <h1>💰 Watch & Earn</h1>
 
-  <div id="balance">
-    Balance: ₹0.00
+    <div id="balance">
+      Balance: ₹0.00
+    </div>
+
+    <button id="watchBtn" onclick="watchAd()">
+      ▶️ WATCH AD
+    </button>
+
+    <div id="message">
+      Watch an ad and earn!
+    </div>
+
+    <div class="info">
+      Rewards are credited only when a valid rewarded event is received.
+    </div>
+
   </div>
 
-  <button id="watchBtn" onclick="watchAd()">
-    ▶️ WATCH AD
-  </button>
+  <script>
 
-  <div id="message">
-    Watch an ad and earn!
-  </div>
+    let balance =
+      parseFloat(localStorage.getItem("userBalance")) || 0;
 
-</div>
+    const watchBtn =
+      document.getElementById("watchBtn");
 
-<script>
-
-let balance =
-  parseFloat(localStorage.getItem("userBalance")) || 0;
-
-const watchBtn =
-  document.getElementById("watchBtn");
-
-const message =
-  document.getElementById("message");
-
-function updateBalance() {
-
-  document.getElementById("balance").innerText =
-    "Balance: ₹" + balance.toFixed(2);
-
-}
-
-updateBalance();
+    const message =
+      document.getElementById("message");
 
 
-async function watchAd() {
+    function updateBalance() {
 
-  watchBtn.disabled = true;
+      document.getElementById("balance").innerText =
+        "Balance: ₹" + balance.toFixed(2);
 
-  message.innerText =
-    "⏳ Opening ad...";
-
-  try {
-
-    if (typeof show_11563642 !== "function") {
-      throw new Error("SDK not loaded");
     }
 
-    await show_11563642();
-
-    /*
-      TEST REWARD ONLY.
-      This proves that the ad flow can return
-      to your page and update the balance.
-    */
-
-    balance += 0.10;
-
-    localStorage.setItem(
-      "userBalance",
-      balance.toFixed(2)
-    );
 
     updateBalance();
 
-    message.innerText =
-      "✅ Test reward added: ₹0.10";
 
-  } catch (error) {
+    async function watchAd() {
 
-    console.error(error);
+      watchBtn.disabled = true;
 
-    message.innerText =
-      "❌ Ad could not be completed.";
+      message.innerText =
+        "⏳ Opening advertisement...";
 
-  }
 
-  watchBtn.disabled = false;
+      try {
 
-}
+        // Check Monetag SDK
+        if (typeof show_11563642 !== "function") {
 
-</script>
+          throw new Error("Monetag SDK not loaded");
+
+        }
+
+
+        // Open rewarded advertisement
+        const event = await show_11563642({
+
+          ymid: "user-" + Date.now(),
+
+          requestVar: "watch_ad"
+
+        });
+
+
+        // Show event in browser console for testing
+        console.log(
+          "Monetag reward event:",
+          event
+        );
+
+
+        /*
+          Reward only when Monetag reports
+          a valued reward event.
+        */
+
+        if (
+          event &&
+          event.reward_event_type === "valued"
+        ) {
+
+          /*
+            TEST REWARD AMOUNT.
+
+            ₹3 is only a test value here.
+            Real payout should later be calculated
+            from verified Monetag revenue.
+          */
+
+          balance += 3.00;
+
+
+          localStorage.setItem(
+            "userBalance",
+            balance.toFixed(2)
+          );
+
+
+          updateBalance();
+
+
+          message.innerText =
+            "✅ Reward confirmed! ₹3.00 added.";
+
+
+        } else {
+
+          message.innerText =
+            "ℹ️ Ad finished, but no verified reward was received.";
+
+        }
+
+
+      } catch (error) {
+
+        console.error(
+          "Monetag error:",
+          error
+        );
+
+
+        message.innerText =
+          "❌ Advertisement could not be completed.";
+
+      }
+
+
+      watchBtn.disabled = false;
+
+    }
+
+  </script>
 
 </body>
 </html>
