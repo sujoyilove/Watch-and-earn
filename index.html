@@ -109,19 +109,16 @@
       Balance: ₹0.00
     </div>
 
-    <!-- Watch Ad Button -->
     <button id="watchBtn" class="btn btn-watch" onclick="watchAd()">
       ▶️ WATCH AD (Earn ₹3.00)
     </button>
 
-    <!-- Daily Check-in Button -->
     <button id="checkinBtn" class="btn btn-checkin" onclick="dailyCheckIn()">
       📅 DAILY CHECK-IN (Earn ₹15.00)
     </button>
 
     <div id="message"></div>
 
-    <!-- Referral Section -->
     <div class="section-box">
       <h3>👥 Refer & Earn</h3>
       <p style="font-size: 13px; margin: 5px 0;">Share your link and get ₹25.00 per referral!</p>
@@ -130,7 +127,6 @@
       <p style="font-size: 12px; margin-top: 8px;">Total Refers: <b id="refCount">0</b></p>
     </div>
 
-    <!-- Withdrawal Section -->
     <div class="section-box">
       <h3>🏧 Withdraw Rewards</h3>
       <p style="font-size: 12px; color: #666; margin: 0 0 10px 0;">Minimum Withdrawal: ₹250.00</p>
@@ -150,11 +146,9 @@
 
   <script>
 
-    // 🔴 আপনার Bot Token এবং Chat ID যুক্ত করা হয়েছে:
     const TELEGRAM_BOT_TOKEN = "8336237362:AAEGnnKmYDu0knJdZRc-vsirYXeDxBTnz8M"; 
     const TELEGRAM_CHAT_ID = "8563550688";
 
-    // 1. Local Storage Data Setup
     let balance = parseFloat(localStorage.getItem("userBalance")) || 0.00;
     let lastCheckIn = localStorage.getItem("lastCheckIn") || "";
     let referCount = parseInt(localStorage.getItem("referCount")) || 0;
@@ -189,35 +183,31 @@
       }
     }
 
-    // 2. Watch Ad Logic
+    // UPDATE: Watch Ad Logic (Immediate play, 17s delay for balance)
     function watchAd() {
       const button = document.getElementById("watchBtn");
       const message = document.getElementById("message");
 
-      button.disabled = true;
-      message.innerText = "⏳ Loading Ad...";
-
-      balance += 3.00;
-      localStorage.setItem("userBalance", balance);
-      updateUI();
-      message.innerText = "✅ Reward added! You earned ₹3.00";
-
+      // 1. Immediately call the ad
       try {
-        show_11563642().then(() => {
-          button.disabled = false;
-        }).catch(() => {
-          button.disabled = false;
-        });
+        show_11563642();
       } catch(e) {
-        button.disabled = false;
+        console.error("Ad failed", e);
       }
 
+      button.disabled = true;
+      message.innerText = "⏳ Watching ad... Reward will be added in 17s!";
+
+      // 2. Add reward after 17 seconds
       setTimeout(() => {
+        balance += 3.00;
+        localStorage.setItem("userBalance", balance);
+        updateUI();
+        message.innerText = "✅ Reward added! You earned ₹3.00";
         button.disabled = false;
-      }, 5000);
+      }, 17000);
     }
 
-    // 3. Daily Check-In Logic
     function dailyCheckIn() {
       const today = new Date().toDateString();
       if (lastCheckIn !== today) {
@@ -231,14 +221,12 @@
       }
     }
 
-    // 4. Refer Link Copy Logic
     function copyReferLink() {
       const linkText = document.getElementById("refLink").innerText;
       navigator.clipboard.writeText(linkText);
       document.getElementById("message").innerText = "📋 Refer link copied!";
     }
 
-    // 5. Send Withdrawal Request to Telegram
     function processWithdraw() {
       const method = document.getElementById("payMethod").value;
       const detail = document.getElementById("payDetail").value.trim();
