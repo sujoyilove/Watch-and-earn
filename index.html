@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Watch & Earn</title>
+  <title>TaskBuddy Free</title>
 
   <!-- Monetag SDK -->
   <script
@@ -16,7 +16,7 @@
   <style>
     body {
       margin: 0;
-      padding: 40px 15px;
+      padding: 30px 15px;
       font-family: Arial, sans-serif;
       text-align: center;
       background: #f5f5f5;
@@ -26,14 +26,14 @@
       max-width: 400px;
       margin: auto;
       background: white;
-      padding: 30px 20px;
+      padding: 25px 20px;
       border-radius: 18px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     }
 
     h1 {
-      font-size: 28px;
-      margin-bottom: 20px;
+      font-size: 27px;
+      margin-bottom: 15px;
     }
 
     #balance {
@@ -121,7 +121,7 @@
 
 <div class="container">
 
-  <h1>💰 Watch & Earn</h1>
+  <h1>💰 TaskBuddy Free</h1>
 
   <div id="balance">
     Balance: ₹0.00
@@ -155,7 +155,7 @@
     <h3>👥 Refer & Earn</h3>
 
     <p style="text-align:center;">
-      Share your referral link with friends.
+      Invite your friends using your Telegram referral link.
     </p>
 
     <div
@@ -184,8 +184,8 @@
 
 
   <div class="info">
-    Rewards shown here are demo rewards until
-    server-side verification is implemented.
+    Rewards are currently in test mode.
+    Secure server verification will be added later.
   </div>
 
 </div>
@@ -243,6 +243,14 @@
 
 
   /* =========================
+     TELEGRAM BOT
+     ========================= */
+
+  const TELEGRAM_BOT =
+    "taskbuddyfree_bot";
+
+
+  /* =========================
      ELEMENTS
   ========================= */
 
@@ -279,13 +287,15 @@
   function updateReferral() {
 
     const link =
-      window.location.origin +
-      window.location.pathname +
-      "?ref=" +
+      "https://t.me/" +
+      TELEGRAM_BOT +
+      "?startapp=" +
       referralCode;
+
 
     document.getElementById("refLink").innerText =
       link;
+
 
     document.getElementById("refCount").innerText =
       referralCount;
@@ -348,7 +358,7 @@
     }
 
 
-    /* Demo reward */
+    /* TEST REWARD */
 
     balance += 15;
 
@@ -430,9 +440,9 @@
       ) {
 
         /*
-          DEMO REWARD ONLY.
-          Real reward must be verified
-          server-side before withdrawal.
+          TEST REWARD ONLY.
+          Real reward should later
+          be verified server-side.
         */
 
         balance += 3;
@@ -499,7 +509,7 @@
         .then(function() {
 
           message.innerText =
-            "📋 Referral link copied!";
+            "📋 Telegram referral link copied!";
 
         })
         .catch(function() {
