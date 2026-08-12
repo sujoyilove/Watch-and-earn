@@ -1,8 +1,11 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Watch & Earn</title>  <style>
+  <title>Watch & Earn</title>
+
+  <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -35,6 +38,60 @@
     }
 
     #message {
+      margin-top: 25px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>💰 Watch Ads & Earn</h1>
+
+  <div id="balance">Balance: ₹0.00</div>
+
+  <button id="watchBtn" onclick="watchAd()">▶️ WATCH AD</button>
+
+  <p id="message">Watch ads and earn rewards!</p>
+
+  <script>
+    let balance = 0;
+
+    function watchAd() {
+      const button = document.getElementById("watchBtn");
+      const message = document.getElementById("message");
+
+      button.disabled = true;
+
+      let seconds = 10;
+
+      message.innerText = "📺 Ad playing... " + seconds + " seconds";
+
+      const timer = setInterval(function() {
+        seconds--;
+
+        message.innerText =
+          "📺 Ad playing... " + seconds + " seconds";
+
+        if (seconds <= 0) {
+          clearInterval(timer);
+
+          balance += 0.10;
+
+          document.getElementById("balance").innerText =
+            "Balance: ₹" + balance.toFixed(2);
+
+          message.innerText =
+            "✅ Ad completed! You earned ₹0.10";
+
+          button.disabled = false;
+        }
+      }, 1000);
+    }
+  </script>
+
+</body>
+</html>    #message {
       margin-top: 20px;
       font-size: 16px;
     }
