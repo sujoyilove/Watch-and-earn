@@ -7,9 +7,11 @@
   <title>Watch & Earn</title>
 
   <!-- Monetag SDK -->
-  <script src="//libtl.com/sdk.js"
-          data-zone="11563642"
-          data-sdk="show_11563642"></script>
+  <script
+    src="//libtl.com/sdk.js"
+    data-zone="11563642"
+    data-sdk="show_11563642">
+  </script>
 
   <style>
     body {
@@ -35,7 +37,7 @@
     }
 
     #balance {
-      font-size: 26px;
+      font-size: 27px;
       font-weight: bold;
       color: #16803c;
       margin: 25px 0;
@@ -61,6 +63,10 @@
       background: #e67e22;
     }
 
+    .refer {
+      background: #8e44ad;
+    }
+
     .btn:disabled {
       background: #999;
       cursor: not-allowed;
@@ -73,10 +79,40 @@
       font-weight: bold;
     }
 
+    .box {
+      margin-top: 25px;
+      padding: 18px;
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      text-align: left;
+    }
+
+    .box h3 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .ref-link {
+      padding: 10px;
+      background: #eee;
+      border-radius: 7px;
+      font-size: 12px;
+      word-break: break-all;
+      margin-top: 10px;
+    }
+
+    .count {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 15px;
+    }
+
     .info {
       margin-top: 25px;
       font-size: 13px;
       color: #777;
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -91,12 +127,18 @@
     Balance: ₹0.00
   </div>
 
+
+  <!-- WATCH AD -->
+
   <button
     id="watchBtn"
     class="btn watch"
     onclick="watchAd()">
     ▶️ WATCH AD
   </button>
+
+
+  <!-- DAILY CHECK-IN -->
 
   <button
     id="checkinBtn"
@@ -105,12 +147,45 @@
     📅 DAILY CHECK-IN
   </button>
 
-  <div id="message">
-    Watch ads and complete daily check-in to earn rewards.
+
+  <!-- REFERRAL -->
+
+  <div class="box">
+
+    <h3>👥 Refer & Earn</h3>
+
+    <p style="text-align:center;">
+      Share your referral link with friends.
+    </p>
+
+    <div
+      id="refLink"
+      class="ref-link">
+      Loading...
+    </div>
+
+    <button
+      class="btn refer"
+      onclick="copyReferral()">
+      📋 COPY REFERRAL LINK
+    </button>
+
+    <div class="count">
+      Total Referrals:
+      <b id="refCount">0</b>
+    </div>
+
   </div>
 
+
+  <div id="message">
+    Watch ads, check in daily and invite friends.
+  </div>
+
+
   <div class="info">
-    Daily check-in can be claimed once per day.
+    Rewards shown here are demo rewards until
+    server-side verification is implemented.
   </div>
 
 </div>
@@ -123,12 +198,53 @@
   ========================= */
 
   let balance =
-    parseFloat(localStorage.getItem("userBalance")) || 0;
+    parseFloat(
+      localStorage.getItem("userBalance")
+    ) || 0;
 
+
+  /* =========================
+     DAILY CHECK-IN
+  ========================= */
 
   let lastCheckIn =
     localStorage.getItem("lastCheckIn") || "";
 
+
+  /* =========================
+     REFERRAL CODE
+  ========================= */
+
+  let referralCode =
+    localStorage.getItem("referralCode");
+
+
+  if (!referralCode) {
+
+    referralCode =
+      "REF" +
+      Math.floor(
+        100000 +
+        Math.random() * 900000
+      );
+
+    localStorage.setItem(
+      "referralCode",
+      referralCode
+    );
+
+  }
+
+
+  let referralCount =
+    parseInt(
+      localStorage.getItem("referralCount")
+    ) || 0;
+
+
+  /* =========================
+     ELEMENTS
+  ========================= */
 
   const watchBtn =
     document.getElementById("watchBtn");
@@ -140,10 +256,15 @@
     document.getElementById("message");
 
 
+  /* =========================
+     BALANCE UI
+  ========================= */
+
   function updateBalance() {
 
     document.getElementById("balance").innerText =
-      "Balance: ₹" + balance.toFixed(2);
+      "Balance: ₹" +
+      balance.toFixed(2);
 
   }
 
@@ -152,13 +273,38 @@
 
 
   /* =========================
-     DAILY CHECK-IN STATUS
+     REFERRAL LINK
+  ========================= */
+
+  function updateReferral() {
+
+    const link =
+      window.location.origin +
+      window.location.pathname +
+      "?ref=" +
+      referralCode;
+
+    document.getElementById("refLink").innerText =
+      link;
+
+    document.getElementById("refCount").innerText =
+      referralCount;
+
+  }
+
+
+  updateReferral();
+
+
+  /* =========================
+     CHECK-IN BUTTON
   ========================= */
 
   function updateCheckInButton() {
 
     const today =
       new Date().toDateString();
+
 
     if (lastCheckIn === today) {
 
@@ -180,6 +326,58 @@
 
 
   updateCheckInButton();
+
+
+  /* =========================
+     DAILY CHECK-IN
+  ========================= */
+
+  function dailyCheckIn() {
+
+    const today =
+      new Date().toDateString();
+
+
+    if (lastCheckIn === today) {
+
+      message.innerText =
+        "ℹ️ You already checked in today.";
+
+      return;
+
+    }
+
+
+    /* Demo reward */
+
+    balance += 15;
+
+
+    lastCheckIn =
+      today;
+
+
+    localStorage.setItem(
+      "userBalance",
+      balance.toFixed(2)
+    );
+
+
+    localStorage.setItem(
+      "lastCheckIn",
+      lastCheckIn
+    );
+
+
+    updateBalance();
+
+    updateCheckInButton();
+
+
+    message.innerText =
+      "🎉 Daily Check-in complete! ₹15.00 added.";
+
+  }
 
 
   /* =========================
@@ -211,7 +409,8 @@
         await show_11563642({
 
           ymid:
-            "user-" + Date.now(),
+            "user-" +
+            Date.now(),
 
           requestVar:
             "watch_ad"
@@ -231,14 +430,12 @@
       ) {
 
         /*
-          TEST REWARD.
-
-          This ₹3 value is only a demo
-          until a secure server-side
-          reward system is implemented.
+          DEMO REWARD ONLY.
+          Real reward must be verified
+          server-side before withdrawal.
         */
 
-        balance += 3.00;
+        balance += 3;
 
 
         localStorage.setItem(
@@ -281,56 +478,68 @@
 
 
   /* =========================
-     DAILY CHECK-IN
+     COPY REFERRAL LINK
   ========================= */
 
-  function dailyCheckIn() {
+  function copyReferral() {
 
-    const today =
-      new Date().toDateString();
+    const link =
+      document.getElementById(
+        "refLink"
+      ).innerText;
 
 
-    if (lastCheckIn === today) {
+    if (
+      navigator.clipboard &&
+      navigator.clipboard.writeText
+    ) {
+
+      navigator.clipboard
+        .writeText(link)
+        .then(function() {
+
+          message.innerText =
+            "📋 Referral link copied!";
+
+        })
+        .catch(function() {
+
+          message.innerText =
+            "❌ Could not copy the link.";
+
+        });
+
+    } else {
 
       message.innerText =
-        "ℹ️ You already checked in today.";
-
-      return;
+        "📋 Copy this link manually: " +
+        link;
 
     }
 
-
-    /*
-      TEST REWARD ONLY.
-      Daily reward = ₹15.
-    */
-
-    balance += 15.00;
+  }
 
 
-    lastCheckIn =
-      today;
+  /* =========================
+     REFERRAL DETECTION
+  ========================= */
 
-
-    localStorage.setItem(
-      "userBalance",
-      balance.toFixed(2)
+  const params =
+    new URLSearchParams(
+      window.location.search
     );
 
 
-    localStorage.setItem(
-      "lastCheckIn",
-      lastCheckIn
+  const ref =
+    params.get("ref");
+
+
+  if (ref) {
+
+    console.log(
+      "Referral detected:",
+      ref
     );
-
-
-    updateBalance();
-
-    updateCheckInButton();
-
-
-    message.innerText =
-      "🎉 Daily Check-in complete! ₹15.00 added.";
 
   }
 
