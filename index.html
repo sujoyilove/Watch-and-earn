@@ -100,23 +100,26 @@
       button.disabled = true;
       message.innerText = "⏳ Loading Ad...";
 
+      // ৩ টাকা ব্যালেন্স যোগ করার লজিক
+      balance += 3.00;
+      document.getElementById("balance").innerText = "Balance: ₹" + balance.toFixed(2);
+      message.innerText = "✅ Reward added! You earned ₹3.00";
+
       // Monetag Ad Call
       try {
         show_11563642().then(() => {
-          rewardUser();
+          button.disabled = false;
         }).catch(() => {
-          rewardUser();
+          button.disabled = false;
         });
       } catch(e) {
-        rewardUser();
-      }
-
-      function rewardUser() {
-        balance += 0.10;
-        document.getElementById("balance").innerText = "Balance: ₹" + balance.toFixed(2);
-        message.innerText = "✅ Reward added! You earned ₹0.10";
         button.disabled = false;
       }
+
+      // ৫ সেকেন্ড পর বাটন আবার কাজ করবে
+      setTimeout(() => {
+        button.disabled = false;
+      }, 5000);
     }
     
   </script>
