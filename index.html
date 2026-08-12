@@ -55,40 +55,41 @@
   <p id="message">Watch ads and earn rewards!</p>
 
   <script>
-    let balance = 0;
+  let balance = 0;
 
-    function watchAd() {
-      const button = document.getElementById("watchBtn");
-      const message = document.getElementById("message");
+  function watchAd() {
+    const button = document.getElementById("watchBtn");
+    const message = document.getElementById("message");
 
-      button.disabled = true;
+    button.disabled = true;
 
-      let seconds = 10;
+    let seconds = 10;
 
-      message.innerText = "📺 Ad playing... " + seconds + " seconds";
+    message.innerText = "📺 Ad playing... " + seconds;
 
-      const timer = setInterval(function() {
-        seconds--;
+    const timer = setInterval(function () {
+      seconds--;
+
+      if (seconds > 0) {
+        message.innerText = "📺 Ad playing... " + seconds;
+      }
+
+      if (seconds === 0) {
+        clearInterval(timer);
+
+        balance += 0.10;
+
+        document.getElementById("balance").innerText =
+          "Balance: ₹" + balance.toFixed(2);
 
         message.innerText =
-          "📺 Ad playing... " + seconds + " seconds";
+          "✅ Demo reward added! You earned ₹0.10";
 
-        if (seconds <= 0) {
-          clearInterval(timer);
-
-          balance += 0.10;
-
-          document.getElementById("balance").innerText =
-            "Balance: ₹" + balance.toFixed(2);
-
-          message.innerText =
-            "✅ Ad completed! You earned ₹0.10";
-
-          button.disabled = false;
-        }
-      }, 1000);
-    }
-  </script>
+        button.disabled = false;
+      }
+    }, 1000);
+  }
+</script>
 
 </body>
 </html>    #message {
