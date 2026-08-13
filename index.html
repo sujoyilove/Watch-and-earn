@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TaskBuddy Free</title>
+  <title>TaskBuddy</title>
 
   <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -15,34 +15,43 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      background: var(--tg-theme-bg-color, #f5f5f5);
-      color: var(--tg-theme-text-color, #000);
+      background: #f0f2f5;
       padding: 16px;
       min-height: 100vh;
+      color: #1a1a1a;
     }
     .container {
       max-width: 420px;
       margin: 0 auto;
-      background: var(--tg-theme-secondary-bg-color, #fff);
-      border-radius: 16px;
-      padding: 20px 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 22px 18px;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.08);
     }
-    h1 { text-align: center; font-size: 26px; margin-bottom: 4px; }
-    .subtitle { text-align: center; color: #888; font-size: 13px; margin-bottom: 18px; }
+    h1 {
+      text-align: center;
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
     #balance {
       text-align: center;
-      font-size: 32px;
+      font-size: 34px;
       font-weight: 700;
       color: #16a34a;
-      margin: 16px 0 20px;
+      margin: 18px 0 22px;
     }
     .btn {
       width: 100%;
       border: none;
       border-radius: 12px;
-      padding: 14px;
-      margin-top: 10px;
+      padding: 15px;
+      margin-top: 11px;
       color: white;
       font-size: 16px;
       font-weight: 600;
@@ -51,35 +60,40 @@
     .btn:disabled {
       background: #9ca3af !important;
       cursor: not-allowed;
-      opacity: 0.7;
+      opacity: 0.75;
     }
     .watch { background: #16a34a; }
     .checkin { background: #ea580c; }
     .refer { background: #7c3aed; }
     .withdraw { background: #2563eb; }
     .box {
-      margin-top: 20px;
+      margin-top: 22px;
       padding: 16px;
       background: #f8fafc;
       border-radius: 14px;
       border: 1px solid #e2e8f0;
     }
-    .box h3 { text-align: center; margin-bottom: 10px; font-size: 16px; }
+    .box h3 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
     .ref-link {
       background: #e2e8f0;
       border-radius: 8px;
-      padding: 10px;
+      padding: 11px;
       font-size: 12px;
       word-break: break-all;
       margin: 10px 0;
       text-align: center;
+      color: #334155;
     }
     .center { text-align: center; }
     .small { font-size: 12px; color: #64748b; line-height: 1.5; }
     input, select {
       width: 100%;
       padding: 12px;
-      margin-top: 8px;
+      margin-top: 9px;
       border: 1px solid #cbd5e1;
       border-radius: 10px;
       font-size: 14px;
@@ -87,19 +101,19 @@
     }
     #message {
       text-align: center;
-      min-height: 22px;
-      margin-top: 16px;
+      min-height: 24px;
+      margin-top: 18px;
       font-size: 14px;
       font-weight: 600;
       color: #334155;
     }
-    #firebaseStatus {
+    #status {
       text-align: center;
       margin-top: 6px;
-      font-size: 11px;
+      font-size: 12px;
       color: #94a3b8;
     }
-    .warning { color: #b45309; margin-top: 8px; }
+    .warning { color: #b45309; margin-top: 8px; font-size: 12px; }
   </style>
 </head>
 <body>
@@ -113,17 +127,19 @@
   <button id="watchBtn" class="btn watch">▶️ WATCH AD (+₹1.00)</button>
   <button id="checkinBtn" class="btn checkin">📅 DAILY CHECK-IN (+₹10.00)</button>
 
+  <!-- Referral Box -->
   <div class="box">
     <h3>👥 Refer & Earn</h3>
     <p class="center small">Share your link and earn when friends join</p>
     <div id="refLink" class="ref-link">Loading...</div>
     <button id="copyBtn" class="btn refer">📋 COPY REFERRAL LINK</button>
-    <p class="center" style="margin-top:10px;">
+    <p class="center" style="margin-top:12px;">
       Your Code: <b id="refCode">---</b>
     </p>
     <p id="refStatus" class="center small">No referral detected.</p>
   </div>
 
+  <!-- Withdraw Box -->
   <div class="box">
     <h3>🏧 Withdraw</h3>
     <p class="small center">Minimum withdrawal: ₹250</p>
@@ -137,348 +153,335 @@
     <input id="withdrawAmount" type="number" min="250" placeholder="Enter amount (min 250)">
 
     <button id="withdrawBtn" class="btn withdraw">Request Withdrawal</button>
-    <p class="small warning center">Withdrawal requests are subject to verification.</p>
+    <p class="warning center">Withdrawal requests are subject to verification.</p>
   </div>
 
   <div id="message">Connecting...</div>
-  <div id="firebaseStatus"></div>
+  <div id="status"></div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import {
-  getFirestore, doc, getDoc, setDoc, updateDoc,
-  collection, addDoc, serverTimestamp, increment
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+  // ===================== FIREBASE =====================
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc,
+    collection, addDoc, serverTimestamp, increment
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCWHhxS5KPF_qdVDn-ZcLs7pM66feuw7VE",
-  authDomain: "task-buddy-free.firebaseapp.com",
-  projectId: "task-buddy-free",
-  storageBucket: "task-buddy-free.firebasestorage.app",
-  messagingSenderId: "573084747627",
-  appId: "1:573084747627:web:ee9991b118faebc306ae2e",
-  measurementId: "G-8TZ6L2LM5W"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWHhxS5KPF_qdVDn-ZcLs7pM66feuw7VE",
+    authDomain: "task-buddy-free.firebaseapp.com",
+    projectId: "task-buddy-free",
+    storageBucket: "task-buddy-free.firebasestorage.app",
+    messagingSenderId: "573084747627",
+    appId: "1:573084747627:web:ee9991b118faebc306ae2e",
+    measurementId: "G-8TZ6L2LM5W"
+  };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-const TELEGRAM_BOT = "taskbuddyfree_bot";
-const tg = window.Telegram?.WebApp;
+  // ===================== TELEGRAM =====================
+  const BOT_USERNAME = "taskbuddyfree_bot";
+  const tg = window.Telegram?.WebApp;
 
-if (tg) {
-  tg.ready();
-  tg.expand();
-}
+  if (tg) {
+    tg.ready();
+    tg.expand();
+  }
 
-let currentUser = null;
-let userData = null;
-let referralCode = "";
-let todayCheckin = false;
-let isLoadingUser = false; // ডাবল লোড আটকানোর জন্য
+  // ===================== STATE =====================
+  let currentUser = null;
+  let userData = null;
+  let isBusy = false;
 
-const balanceEl = document.getElementById("balance");
-const watchBtn = document.getElementById("watchBtn");
-const checkinBtn = document.getElementById("checkinBtn");
-const copyBtn = document.getElementById("copyBtn");
-const withdrawBtn = document.getElementById("withdrawBtn");
-const message = document.getElementById("message");
-const firebaseStatus = document.getElementById("firebaseStatus");
-const refLinkEl = document.getElementById("refLink");
-const refCodeEl = document.getElementById("refCode");
-const refStatusEl = document.getElementById("refStatus");
+  // ===================== ELEMENTS =====================
+  const balanceEl   = document.getElementById("balance");
+  const watchBtn    = document.getElementById("watchBtn");
+  const checkinBtn  = document.getElementById("checkinBtn");
+  const copyBtn     = document.getElementById("copyBtn");
+  const withdrawBtn = document.getElementById("withdrawBtn");
+  const messageEl   = document.getElementById("message");
+  const statusEl    = document.getElementById("status");
+  const refLinkEl   = document.getElementById("refLink");
+  const refCodeEl   = document.getElementById("refCode");
+  const refStatusEl = document.getElementById("refStatus");
 
-function showMessage(text) {
-  message.innerText = text;
-}
+  function showMsg(text) {
+    messageEl.innerText = text;
+  }
 
-function generateReferralCode() {
-  return "REF" + Math.floor(100000 + Math.random() * 900000);
-}
+  function generateCode() {
+    return "REF" + Math.floor(100000 + Math.random() * 900000);
+  }
 
-function getStartParam() {
-  try {
-    if (tg?.initDataUnsafe?.start_param) {
-      return tg.initDataUnsafe.start_param;
+  function getStartParam() {
+    try {
+      return tg?.initDataUnsafe?.start_param || null;
+    } catch (e) {
+      return null;
     }
-  } catch (e) {}
-  return null;
-}
-
-function updateUI() {
-  const bal = Number(userData?.balance || 0);
-  balanceEl.innerText = "Balance: ₹" + bal.toFixed(2);
-
-  referralCode = userData?.referralCode || referralCode || generateReferralCode();
-
-  refCodeEl.innerText = referralCode;
-  refLinkEl.innerText = `https://t.me/\( {TELEGRAM_BOT}?startapp= \){referralCode}`;
-
-  const today = new Date().toDateString();
-  todayCheckin = userData?.lastCheckIn === today;
-
-  if (todayCheckin) {
-    checkinBtn.disabled = true;
-    checkinBtn.innerText = "✅ CHECKED IN TODAY";
-  } else {
-    checkinBtn.disabled = false;
-    checkinBtn.innerText = "📅 DAILY CHECK-IN (+₹10.00)";
-  }
-}
-
-async function loadUser(user) {
-  if (isLoadingUser) return;
-  isLoadingUser = true;
-
-  try {
-    currentUser = user;
-    const userRef = doc(db, "users", user.uid);
-    const snapshot = await getDoc(userRef);
-
-    if (!snapshot.exists()) {
-      // শুধুমাত্র নতুন ইউজার হলে তৈরি করো
-      const newCode = generateReferralCode();
-      const newUser = {
-        uid: user.uid,
-        balance: 0,
-        referralCode: newCode,
-        referralCount: 0,
-        lastCheckIn: "",
-        createdAt: serverTimestamp(),
-        referredBy: null
-      };
-
-      await setDoc(userRef, newUser);
-      userData = { ...newUser, balance: 0 };
-      referralCode = newCode;
-
-      firebaseStatus.innerText = "🟢 New account created";
-      showMessage("Welcome! Account created.");
-    } else {
-      // পুরনো ইউজার → ব্যালেন্সসহ সব ডেটা রাখো
-      userData = snapshot.data();
-      firebaseStatus.innerText = "🟢 Firebase connected";
-      showMessage("Ready!");
-    }
-
-    updateUI();
-    await processReferral();
-  } catch (err) {
-    console.error("loadUser error:", err);
-    firebaseStatus.innerText = "🔴 Profile load failed";
-    showMessage("❌ Could not load account.");
-  } finally {
-    isLoadingUser = false;
-  }
-}
-
-async function processReferral() {
-  if (!currentUser || !userData) return;
-
-  const incomingCode = getStartParam();
-  if (!incomingCode) {
-    refStatusEl.innerText = "No referral detected.";
-    return;
   }
 
-  if (incomingCode === userData.referralCode) {
-    refStatusEl.innerText = "❌ Self-referral not allowed.";
-    return;
-  }
+  // ===================== UI UPDATE =====================
+  function updateUI() {
+    if (!userData) return;
 
-  if (userData.referredBy) {
-    refStatusEl.innerText = "Already referred by someone.";
-    return;
-  }
+    const bal = Number(userData.balance || 0);
+    balanceEl.innerText = "Balance: ₹" + bal.toFixed(2);
 
-  try {
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      referredBy: incomingCode
-    });
-    userData.referredBy = incomingCode;
-    refStatusEl.innerText = "🎉 Referral applied: " + incomingCode;
-  } catch (err) {
-    console.error(err);
-    refStatusEl.innerText = "Referral detected: " + incomingCode;
-  }
-}
+    const code = userData.referralCode || "---";
+    refCodeEl.innerText = code;
+    refLinkEl.innerText = "https://t.me/" + BOT_USERNAME + "?startapp=" + code;
 
-/* ===== WATCH AD ===== */
-watchBtn.addEventListener("click", async () => {
-  if (!currentUser || !userData) {
-    showMessage("⏳ Please wait, connecting...");
-    return;
-  }
-
-  watchBtn.disabled = true;
-  showMessage("⏳ Opening advertisement...");
-
-  try {
-    if (typeof show_11563642 !== "function") {
-      throw new Error("Monetag SDK not loaded");
-    }
-
-    const result = await show_11563642({
-      ymid: currentUser.uid + "_" + Date.now()
-    });
-
-    console.log("Ad result:", result);
-
-    const reward = 1.00;
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      balance: increment(reward)
-    });
-
-    userData.balance = (Number(userData.balance) || 0) + reward;
-    updateUI();
-    showMessage(`✅ Ad completed! +₹${reward.toFixed(2)} added`);
-
-  } catch (error) {
-    console.error("Ad Error:", error);
-    let errorMsg = "❌ Advertisement failed or closed.";
-
-    if (error?.message) {
-      const msg = error.message.toLowerCase();
-      if (msg.includes("empty") || msg.includes("feed") || msg.includes("no ad")) {
-        errorMsg = "❌ No ads available right now. Try again later.";
-      } else if (msg.includes("timeout")) {
-        errorMsg = "❌ Ad timed out. Please try again.";
-      } else if (msg.includes("closed") || msg.includes("skip")) {
-        errorMsg = "❌ You closed the ad early.";
-      } else {
-        errorMsg = "❌ " + error.message;
-      }
-    }
-    showMessage(errorMsg);
-  }
-
-  watchBtn.disabled = false;
-});
-
-/* ===== DAILY CHECK-IN ===== */
-checkinBtn.addEventListener("click", async () => {
-  if (!currentUser || !userData) {
-    showMessage("⏳ Connecting...");
-    return;
-  }
-
-  if (todayCheckin) {
-    showMessage("✅ Already checked in today.");
-    return;
-  }
-
-  checkinBtn.disabled = true;
-  showMessage("⏳ Processing check-in...");
-
-  try {
     const today = new Date().toDateString();
-    const reward = 10.00;   // ঠিক ১০ টাকা
+    const alreadyChecked = userData.lastCheckIn === today;
 
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      balance: increment(reward),
-      lastCheckIn: today
-    });
-
-    userData.balance = (Number(userData.balance) || 0) + reward;
-    userData.lastCheckIn = today;
-    todayCheckin = true;
-
-    updateUI();
-    showMessage(`✅ Check-in successful! +₹${reward.toFixed(2)}`);
-  } catch (error) {
-    console.error(error);
-    showMessage("❌ Check-in failed.");
-    checkinBtn.disabled = false;
-  }
-});
-
-/* ===== COPY REFERRAL ===== */
-copyBtn.addEventListener("click", async () => {
-  if (!referralCode) {
-    showMessage("Referral code not ready.");
-    return;
+    if (alreadyChecked) {
+      checkinBtn.disabled = true;
+      checkinBtn.innerText = "✅ CHECKED IN TODAY";
+    } else {
+      checkinBtn.disabled = false;
+      checkinBtn.innerText = "📅 DAILY CHECK-IN (+₹10.00)";
+    }
   }
 
-  const link = `https://t.me/\( {TELEGRAM_BOT}?startapp= \){referralCode}`;
-  try {
-    await navigator.clipboard.writeText(link);
-    showMessage("📋 Referral link copied!");
-  } catch (e) {
-    showMessage(link);
-  }
-});
+  // ===================== LOAD USER =====================
+  async function loadUser(user) {
+    if (isBusy) return;
+    isBusy = true;
 
-/* ===== WITHDRAW ===== */
-withdrawBtn.addEventListener("click", async () => {
-  if (!currentUser || !userData) {
-    showMessage("⏳ Connecting...");
-    return;
-  }
+    try {
+      currentUser = user;
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
 
-  const method = document.getElementById("paymentMethod").value;
-  const detail = document.getElementById("paymentDetail").value.trim();
-  const amount = Number(document.getElementById("withdrawAmount").value);
-  const available = Number(userData.balance || 0);
+      if (!snap.exists()) {
+        // নতুন ইউজার
+        const newCode = generateCode();
+        const data = {
+          uid: user.uid,
+          balance: 0,
+          referralCode: newCode,
+          lastCheckIn: "",
+          referredBy: null,
+          createdAt: serverTimestamp()
+        };
+        await setDoc(userRef, data);
+        userData = data;
+        statusEl.innerText = "🟢 New account created";
+        showMsg("Welcome! Account created.");
+      } else {
+        // পুরনো ইউজার
+        userData = snap.data();
+        statusEl.innerText = "🟢 Connected";
+        showMsg("Ready!");
+      }
 
-  if (!detail) {
-    showMessage("❌ Enter payment details.");
-    return;
-  }
-  if (!Number.isFinite(amount) || amount < 250) {
-    showMessage("❌ Minimum withdrawal is ₹250.");
-    return;
-  }
-  if (amount > available) {
-    showMessage("❌ Insufficient balance.");
-    return;
-  }
-
-  withdrawBtn.disabled = true;
-  showMessage("⏳ Submitting request...");
-
-  try {
-    await addDoc(collection(db, "withdrawalRequests"), {
-      uid: currentUser.uid,
-      amount: amount,
-      method: method,
-      paymentDetail: detail,
-      status: "pending",
-      createdAt: serverTimestamp()
-    });
-
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      balance: increment(-amount)
-    });
-
-    userData.balance = available - amount;
-    updateUI();
-
-    document.getElementById("paymentDetail").value = "";
-    document.getElementById("withdrawAmount").value = "";
-    showMessage("✅ Withdrawal request submitted!");
-  } catch (error) {
-    console.error(error);
-    showMessage("❌ Withdrawal request failed.");
+      updateUI();
+      handleReferral();
+    } catch (err) {
+      console.error(err);
+      statusEl.innerText = "🔴 Error loading profile";
+      showMsg("❌ " + (err.message || "Could not load account"));
+    } finally {
+      isBusy = false;
+    }
   }
 
-  withdrawBtn.disabled = false;
-});
+  // ===================== REFERRAL =====================
+  async function handleReferral() {
+    if (!currentUser || !userData) return;
 
-/* ===== AUTH ===== */
-signInAnonymously(auth).catch((error) => {
-  console.error(error);
-  firebaseStatus.innerText = "🔴 Auth failed";
-  showMessage("❌ Firebase authentication failed.");
-});
+    const code = getStartParam();
+    if (!code) {
+      refStatusEl.innerText = "No referral detected.";
+      return;
+    }
 
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    loadUser(user);
+    if (code === userData.referralCode) {
+      refStatusEl.innerText = "❌ Self-referral not allowed.";
+      return;
+    }
+
+    if (userData.referredBy) {
+      refStatusEl.innerText = "Already referred.";
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        referredBy: code
+      });
+      userData.referredBy = code;
+      refStatusEl.innerText = "🎉 Referral applied: " + code;
+    } catch (e) {
+      refStatusEl.innerText = "Referral detected: " + code;
+    }
   }
-});
+
+  // ===================== WATCH AD =====================
+  watchBtn.addEventListener("click", async () => {
+    if (!currentUser || !userData) {
+      showMsg("⏳ Please wait...");
+      return;
+    }
+
+    watchBtn.disabled = true;
+    showMsg("⏳ Opening ad...");
+
+    try {
+      if (typeof show_11563642 !== "function") {
+        throw new Error("Ad SDK not loaded");
+      }
+
+      await show_11563642({
+        ymid: currentUser.uid + "_" + Date.now()
+      });
+
+      // সফল হলে ১ টাকা যোগ
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        balance: increment(1)
+      });
+
+      userData.balance = (Number(userData.balance) || 0) + 1;
+      updateUI();
+      showMsg("✅ Ad completed! +₹1.00");
+    } catch (err) {
+      console.error(err);
+      let msg = "❌ Ad failed or closed";
+      if (err?.message) {
+        const m = err.message.toLowerCase();
+        if (m.includes("feed") || m.includes("empty") || m.includes("no ad")) {
+          msg = "❌ No ads available now. Try later.";
+        } else if (m.includes("timeout")) {
+          msg = "❌ Ad timed out";
+        }
+      }
+      showMsg(msg);
+    }
+
+    watchBtn.disabled = false;
+  });
+
+  // ===================== DAILY CHECK-IN =====================
+  checkinBtn.addEventListener("click", async () => {
+    if (!currentUser || !userData) {
+      showMsg("⏳ Please wait...");
+      return;
+    }
+
+    const today = new Date().toDateString();
+    if (userData.lastCheckIn === today) {
+      showMsg("✅ Already checked in today");
+      return;
+    }
+
+    checkinBtn.disabled = true;
+    showMsg("⏳ Processing...");
+
+    try {
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        balance: increment(10),
+        lastCheckIn: today
+      });
+
+      userData.balance = (Number(userData.balance) || 0) + 10;
+      userData.lastCheckIn = today;
+      updateUI();
+      showMsg("✅ Check-in successful! +₹10.00");
+    } catch (err) {
+      console.error(err);
+      showMsg("❌ Check-in failed: " + (err.message || ""));
+      checkinBtn.disabled = false;
+    }
+  });
+
+  // ===================== COPY LINK =====================
+  copyBtn.addEventListener("click", async () => {
+    if (!userData?.referralCode) {
+      showMsg("Code not ready");
+      return;
+    }
+    const link = "https://t.me/" + BOT_USERNAME + "?startapp=" + userData.referralCode;
+    try {
+      await navigator.clipboard.writeText(link);
+      showMsg("📋 Link copied!");
+    } catch (e) {
+      showMsg(link);
+    }
+  });
+
+  // ===================== WITHDRAW =====================
+  withdrawBtn.addEventListener("click", async () => {
+    if (!currentUser || !userData) {
+      showMsg("⏳ Please wait...");
+      return;
+    }
+
+    const method = document.getElementById("paymentMethod").value;
+    const detail = document.getElementById("paymentDetail").value.trim();
+    const amount = Number(document.getElementById("withdrawAmount").value);
+    const bal = Number(userData.balance || 0);
+
+    if (!detail) {
+      showMsg("❌ Enter payment details");
+      return;
+    }
+    if (!amount || amount < 250) {
+      showMsg("❌ Minimum ₹250");
+      return;
+    }
+    if (amount > bal) {
+      showMsg("❌ Insufficient balance");
+      return;
+    }
+
+    withdrawBtn.disabled = true;
+    showMsg("⏳ Submitting...");
+
+    try {
+      await addDoc(collection(db, "withdrawalRequests"), {
+        uid: currentUser.uid,
+        amount: amount,
+        method: method,
+        paymentDetail: detail,
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        balance: increment(-amount)
+      });
+
+      userData.balance = bal - amount;
+      updateUI();
+
+      document.getElementById("paymentDetail").value = "";
+      document.getElementById("withdrawAmount").value = "";
+      showMsg("✅ Withdrawal request submitted");
+    } catch (err) {
+      console.error(err);
+      showMsg("❌ Failed: " + (err.message || ""));
+    }
+
+    withdrawBtn.disabled = false;
+  });
+
+  // ===================== START =====================
+  signInAnonymously(auth).catch(err => {
+    console.error(err);
+    statusEl.innerText = "🔴 Auth failed";
+    showMsg("❌ Login failed");
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loadUser(user);
+    }
+  });
 </script>
 </body>
 </html>
