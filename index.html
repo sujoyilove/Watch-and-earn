@@ -256,7 +256,7 @@
 
 
   /* =========================================
-     GLOBAL VARIABLES
+     VARIABLES
   ========================================= */
 
   let currentUser = null;
@@ -320,7 +320,7 @@
     } catch (error) {
 
       console.log(
-        "Telegram parameter unavailable",
+        "Telegram start parameter unavailable",
         error
       );
 
@@ -349,7 +349,7 @@
 
 
   /* =========================================
-     CREATE TELEGRAM REFERRAL LINK
+     REFERRAL LINK
   ========================================= */
 
   function getReferralLink() {
@@ -451,7 +451,6 @@
       referralCode =
         createReferralCode();
 
-
       balance = 0;
 
       lastCheckIn = "";
@@ -462,7 +461,6 @@
       await setDoc(
         userRef,
         {
-
           uid:
             user.uid,
 
@@ -480,7 +478,6 @@
 
           createdAt:
             serverTimestamp()
-
         }
       );
 
@@ -526,8 +523,6 @@
       "Ready to earn!";
 
 
-    /* Process incoming referral */
-
     await processIncomingReferral();
 
   }
@@ -553,19 +548,19 @@
     }
 
 
+    /* Prevent self-referral */
+
     if (
       incomingReferral ===
       referralCode
     ) {
 
       return;
+
     }
 
 
-    /*
-      Prevent repeated processing
-      on the same browser.
-    */
+    /* Prevent repeated referral */
 
     const alreadyUsed =
       localStorage.getItem(
@@ -574,9 +569,7 @@
 
 
     if (alreadyUsed) {
-
       return;
-
     }
 
 
@@ -590,6 +583,41 @@
         );
 
 
+      const snapshot =
+        await getDoc(userRef);
+
+
+      if (!snapshot.exists()) {
+        return;
+      }
+
+
+      const data =
+        snapshot.data();
+
+
+      /*
+        If referral already exists,
+        do not overwrite it.
+      */
+
+      if (data.referredBy) {
+
+        localStorage.setItem(
+          "referralUsed",
+          "true"
+        );
+
+        return;
+
+      }
+
+
+      /*
+        Save referral relationship
+        to the new user's document.
+      */
+
       await updateDoc(
         userRef,
         {
@@ -598,7 +626,10 @@
             incomingReferral,
 
           referralStatus:
-            "pending"
+            "pending",
+
+          referralDetectedAt:
+            serverTimestamp()
 
         }
       );
@@ -611,7 +642,7 @@
 
 
       message.innerText =
-        "🎉 Referral detected!";
+        "🎉 Referral detected successfully!";
 
 
     } catch (error) {
@@ -620,6 +651,10 @@
         "Referral error:",
         error
       );
+
+
+      message.innerText =
+        "❌ Referral could not be saved.";
 
     }
 
@@ -759,7 +794,7 @@
 
           /*
             TEST REWARD ONLY.
-            Real money rewards need
+            Real monetary rewards require
             server-side verification.
           */
 
@@ -815,7 +850,7 @@
 
 
   /* =========================================
-     COPY REFERRAL LINK
+     COPY REFERRAL
   ========================================= */
 
   window.copyReferral =
@@ -857,11 +892,10 @@
 
 
   /* =========================================
-     FIREBASE ANONYMOUS LOGIN
+     FIREBASE LOGIN
   ========================================= */
 
   signInAnonymously(auth)
-
     .catch(function(error) {
 
       console.error(
@@ -872,6 +906,7 @@
 
       message.innerText =
         "❌ Firebase login failed.";
+
 
       document.getElementById(
         "firebaseStatus"
@@ -898,6 +933,7 @@
               "User loading error:",
               error
             );
+
 
             message.innerText =
               "❌ Could not load user data.";
