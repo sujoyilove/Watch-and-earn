@@ -6,7 +6,7 @@
 
   <title>TaskBuddy Free</title>
 
-  <!-- Monetag SDK -->
+  <!-- Monetag -->
   <script
     src="//libtl.com/sdk.js"
     data-zone="11563642"
@@ -108,11 +108,10 @@
       font-size: 15px;
     }
 
-    .info {
-      margin-top: 25px;
-      font-size: 13px;
+    .status {
+      font-size: 12px;
       color: #777;
-      line-height: 1.5;
+      margin-top: 12px;
     }
   </style>
 </head>
@@ -127,18 +126,12 @@
     Balance: ₹0.00
   </div>
 
-
-  <!-- WATCH AD -->
-
   <button
     id="watchBtn"
     class="btn watch"
     onclick="watchAd()">
     ▶️ WATCH AD
   </button>
-
-
-  <!-- DAILY CHECK-IN -->
 
   <button
     id="checkinBtn"
@@ -147,21 +140,18 @@
     📅 DAILY CHECK-IN
   </button>
 
-
-  <!-- REFERRAL -->
-
   <div class="box">
 
     <h3>👥 Refer & Earn</h3>
 
     <p style="text-align:center;">
-      Invite your friends using your Telegram referral link.
+      Invite friends using your Telegram referral link.
     </p>
 
     <div
       id="refLink"
       class="ref-link">
-      Loading...
+      Creating referral link...
     </div>
 
     <button
@@ -177,82 +167,103 @@
 
   </div>
 
-
   <div id="message">
-    Watch ads, check in daily and invite friends.
+    Connecting to Firebase...
   </div>
 
-
-  <div class="info">
-    Rewards are currently in test mode.
-    Secure server verification will be added later.
+  <div
+    id="firebaseStatus"
+    class="status">
   </div>
 
 </div>
 
 
-<script>
+<!-- =========================
+     FIREBASE
+========================= -->
+
+<script type="module">
+
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+  import {
+    getAuth,
+    signInAnonymously,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    increment,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
 
   /* =========================
-     BALANCE
+     FIREBASE CONFIG
   ========================= */
 
-  let balance =
-    parseFloat(
-      localStorage.getItem("userBalance")
-    ) || 0;
+  const firebaseConfig = {
+
+    apiKey:
+      "AIzaSyCWHhxS5KPF_qdVDn-ZcLs7pM66feuw7VE",
+
+    authDomain:
+      "task-buddy-free.firebaseapp.com",
+
+    projectId:
+      "task-buddy-free",
+
+    storageBucket:
+      "task-buddy-free.firebasestorage.app",
+
+    messagingSenderId:
+      "573084747627",
+
+    appId:
+      "1:573084747627:web:ee9991b118faebc306ae2e",
+
+    measurementId:
+      "G-8TZ6L2LM5W"
+
+  };
 
 
   /* =========================
-     DAILY CHECK-IN
+     INITIALIZE FIREBASE
   ========================= */
 
-  let lastCheckIn =
-    localStorage.getItem("lastCheckIn") || "";
+  const app =
+    initializeApp(firebaseConfig);
+
+  const auth =
+    getAuth(app);
+
+  const db =
+    getFirestore(app);
 
 
   /* =========================
-     REFERRAL CODE
+     GLOBAL VARIABLES
   ========================= */
 
-  let referralCode =
-    localStorage.getItem("referralCode");
+  let currentUser = null;
 
+  let balance = 0;
 
-  if (!referralCode) {
+  let lastCheckIn = "";
 
-    referralCode =
-      "REF" +
-      Math.floor(
-        100000 +
-        Math.random() * 900000
-      );
+  let referralCode = "";
 
-    localStorage.setItem(
-      "referralCode",
-      referralCode
-    );
+  let referralCount = 0;
 
-  }
-
-
-  let referralCount =
-    parseInt(
-      localStorage.getItem("referralCount")
-    ) || 0;
-
-
-  /* =========================
-     TELEGRAM BOT
-     ========================= */
-
-  const TELEGRAM_BOT =
-    "taskbuddyfree_bot";
-
-
-  /* =========================
-     ELEMENTS
-  ========================= */
 
   const watchBtn =
     document.getElementById("watchBtn");
@@ -265,45 +276,296 @@
 
 
   /* =========================
-     BALANCE UI
+     TELEGRAM BOT
   ========================= */
 
-  function updateBalance() {
+  const TELEGRAM_BOT =
+    "taskbuddyfree_bot";
 
-    document.getElementById("balance").innerText =
-      "Balance: ₹" +
-      balance.toFixed(2);
+
+  /* =========================
+     TELEGRAM START PARAM
+  ========================= */
+
+  function getReferralFromTelegram() {
+
+    try {
+
+      const tg =
+        window.Telegram?.WebApp;
+
+      if (tg) {
+
+        tg.ready();
+
+        if (
+          tg.initDataUnsafe &&
+          tg.initDataUnsafe.start_param
+        ) {
+
+          return tg.initDataUnsafe.start_param;
+
+        }
+
+      }
+
+    } catch (error) {
+
+      console.log(
+        "Telegram start parameter unavailable"
+      );
+
+    }
+
+    return null;
 
   }
 
 
-  updateBalance();
+  /* =========================
+     CREATE REFERRAL CODE
+  ========================= */
+
+  function createReferralCode() {
+
+    return "REF" +
+      Math.floor(
+        100000 +
+        Math.random() * 900000
+      );
+
+  }
 
 
   /* =========================
-     REFERRAL LINK
+     LOAD USER
   ========================= */
 
-  function updateReferral() {
+  async function loadUser(user) {
 
-    const link =
+    currentUser = user;
+
+    const userRef =
+      doc(
+        db,
+        "users",
+        user.uid
+      );
+
+
+    const snapshot =
+      await getDoc(userRef);
+
+
+    if (!snapshot.exists()) {
+
+      referralCode =
+        createReferralCode();
+
+      balance = 0;
+
+      lastCheckIn = "";
+
+      referralCount = 0;
+
+
+      await setDoc(
+        userRef,
+        {
+
+          uid:
+            user.uid,
+
+          balance:
+            0,
+
+          referralCode:
+            referralCode,
+
+          referralCount:
+            0,
+
+          lastCheckIn:
+            "",
+
+          createdAt:
+            serverTimestamp()
+
+        }
+      );
+
+    } else {
+
+      const data =
+        snapshot.data();
+
+
+      balance =
+        Number(data.balance || 0);
+
+      referralCode =
+        data.referralCode ||
+        createReferralCode();
+
+      referralCount =
+        Number(
+          data.referralCount || 0
+        );
+
+      lastCheckIn =
+        data.lastCheckIn || "";
+
+    }
+
+
+    updateUI();
+
+
+    document.getElementById(
+      "firebaseStatus"
+    ).innerText =
+      "🟢 Firebase connected";
+
+
+    message.innerText =
+      "Ready to earn!";
+
+
+    /* Check incoming referral */
+
+    const incomingReferral =
+      getReferralFromTelegram();
+
+
+    if (
+      incomingReferral &&
+      incomingReferral !== referralCode
+    ) {
+
+      await processReferral(
+        incomingReferral
+      );
+
+    }
+
+  }
+
+
+  /* =========================
+     REFERRAL PROCESS
+  ========================= */
+
+  async function processReferral(
+    incomingReferral
+  ) {
+
+    try {
+
+      /*
+        Prevent the same user from
+        processing a referral repeatedly.
+      */
+
+      const referralUsed =
+        localStorage.getItem(
+          "referralUsed"
+        );
+
+
+      if (referralUsed) {
+
+        return;
+
+      }
+
+
+      const usersRef =
+        doc(
+          db,
+          "users",
+          currentUser.uid
+        );
+
+
+      /*
+        Find users by referral code
+        requires a query/index in a
+        production implementation.
+
+        For now we store the incoming
+        code as pending referral.
+      */
+
+      await updateDoc(
+        usersRef,
+        {
+
+          referredBy:
+            incomingReferral,
+
+          referralStatus:
+            "pending"
+
+        }
+      );
+
+
+      localStorage.setItem(
+        "referralUsed",
+        "true"
+      );
+
+
+      message.innerText =
+        "🎉 Referral detected!";
+
+    } catch (error) {
+
+      console.error(
+        "Referral error:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =========================
+     UPDATE UI
+  ========================= */
+
+  function updateUI() {
+
+    document.getElementById(
+      "balance"
+    ).innerText =
+      "Balance: ₹" +
+      balance.toFixed(2);
+
+
+    document.getElementById(
+      "refCount"
+    ).innerText =
+      referralCount;
+
+
+    const referralLink =
       "https://t.me/" +
       TELEGRAM_BOT +
       "?startapp=" +
       referralCode;
 
 
-    document.getElementById("refLink").innerText =
-      link;
+    document.getElementById(
+      "refLink"
+    ).innerText =
+      referralLink;
 
 
-    document.getElementById("refCount").innerText =
-      referralCount;
+    updateCheckInButton();
 
   }
-
-
-  updateReferral();
 
 
   /* =========================
@@ -316,7 +578,9 @@
       new Date().toDateString();
 
 
-    if (lastCheckIn === today) {
+    if (
+      lastCheckIn === today
+    ) {
 
       checkinBtn.disabled = true;
 
@@ -335,174 +599,209 @@
   }
 
 
-  updateCheckInButton();
-
-
   /* =========================
      DAILY CHECK-IN
   ========================= */
 
-  function dailyCheckIn() {
+  window.dailyCheckIn =
+    async function() {
 
-    const today =
-      new Date().toDateString();
+      if (!currentUser) {
+
+        message.innerText =
+          "⏳ Firebase is connecting...";
+
+        return;
+
+      }
 
 
-    if (lastCheckIn === today) {
+      const today =
+        new Date().toDateString();
+
+
+      if (
+        lastCheckIn === today
+      ) {
+
+        message.innerText =
+          "ℹ️ You already checked in today.";
+
+        return;
+
+      }
+
+
+      /*
+        TEST REWARD.
+
+        Real money rewards should
+        later be controlled server-side.
+      */
+
+      balance += 15;
+
+      lastCheckIn =
+        today;
+
+
+      await updateDoc(
+        doc(
+          db,
+          "users",
+          currentUser.uid
+        ),
+        {
+
+          balance:
+            balance,
+
+          lastCheckIn:
+            lastCheckIn
+
+        }
+      );
+
+
+      updateUI();
+
 
       message.innerText =
-        "ℹ️ You already checked in today.";
+        "🎉 Daily Check-in complete! ₹15.00 added.";
 
-      return;
-
-    }
-
-
-    /* TEST REWARD */
-
-    balance += 15;
-
-
-    lastCheckIn =
-      today;
-
-
-    localStorage.setItem(
-      "userBalance",
-      balance.toFixed(2)
-    );
-
-
-    localStorage.setItem(
-      "lastCheckIn",
-      lastCheckIn
-    );
-
-
-    updateBalance();
-
-    updateCheckInButton();
-
-
-    message.innerText =
-      "🎉 Daily Check-in complete! ₹15.00 added.";
-
-  }
+    };
 
 
   /* =========================
      WATCH AD
   ========================= */
 
-  async function watchAd() {
+  window.watchAd =
+    async function() {
 
-    watchBtn.disabled = true;
+      if (!currentUser) {
 
-    message.innerText =
-      "⏳ Opening advertisement...";
+        message.innerText =
+          "⏳ Firebase is connecting...";
 
-
-    try {
-
-      if (
-        typeof show_11563642 !== "function"
-      ) {
-
-        throw new Error(
-          "Monetag SDK not loaded"
-        );
+        return;
 
       }
 
 
-      const event =
-        await show_11563642({
-
-          ymid:
-            "user-" +
-            Date.now(),
-
-          requestVar:
-            "watch_ad"
-
-        });
-
-
-      console.log(
-        "Monetag reward event:",
-        event
-      );
-
-
-      if (
-        event &&
-        event.reward_event_type === "valued"
-      ) {
-
-        /*
-          TEST REWARD ONLY.
-          Real reward should later
-          be verified server-side.
-        */
-
-        balance += 3;
-
-
-        localStorage.setItem(
-          "userBalance",
-          balance.toFixed(2)
-        );
-
-
-        updateBalance();
-
-
-        message.innerText =
-          "✅ Ad reward confirmed! ₹3.00 added.";
-
-      } else {
-
-        message.innerText =
-          "ℹ️ Ad finished, but no verified reward was received.";
-
-      }
-
-
-    } catch (error) {
-
-      console.error(
-        "Monetag error:",
-        error
-      );
-
+      watchBtn.disabled = true;
 
       message.innerText =
-        "❌ Advertisement could not be completed.";
-
-    }
+        "⏳ Opening advertisement...";
 
 
-    watchBtn.disabled = false;
+      try {
 
-  }
+        if (
+          typeof show_11563642 !==
+          "function"
+        ) {
+
+          throw new Error(
+            "Monetag SDK not loaded"
+          );
+
+        }
+
+
+        const event =
+          await show_11563642({
+
+            ymid:
+              currentUser.uid,
+
+            requestVar:
+              "watch_ad"
+
+          });
+
+
+        console.log(
+          "Ad event:",
+          event
+        );
+
+
+        if (
+          event &&
+          event.reward_event_type ===
+          "valued"
+        ) {
+
+          /*
+            TEST REWARD ONLY.
+            Do NOT use client-side balance
+            as the final real-money system.
+          */
+
+          balance += 3;
+
+
+          await updateDoc(
+            doc(
+              db,
+              "users",
+              currentUser.uid
+            ),
+            {
+
+              balance:
+                balance
+
+            }
+          );
+
+
+          updateUI();
+
+
+          message.innerText =
+            "✅ Ad reward confirmed! ₹3.00 added.";
+
+        } else {
+
+          message.innerText =
+            "ℹ️ Ad finished, but no verified reward was received.";
+
+        }
+
+
+      } catch (error) {
+
+        console.error(
+          "Ad error:",
+          error
+        );
+
+
+        message.innerText =
+          "❌ Advertisement could not be completed.";
+
+      }
+
+
+      watchBtn.disabled = false;
+
+    };
 
 
   /* =========================
-     COPY REFERRAL LINK
+     COPY REFERRAL
   ========================= */
 
-  function copyReferral() {
+  window.copyReferral =
+    function() {
 
-    const link =
-      document.getElementById(
-        "refLink"
-      ).innerText;
+      const link =
+        document.getElementById(
+          "refLink"
+        ).innerText;
 
-
-    if (
-      navigator.clipboard &&
-      navigator.clipboard.writeText
-    ) {
 
       navigator.clipboard
         .writeText(link)
@@ -515,43 +814,48 @@
         .catch(function() {
 
           message.innerText =
-            "❌ Could not copy the link.";
+            "❌ Could not copy link.";
 
         });
 
-    } else {
-
-      message.innerText =
-        "📋 Copy this link manually: " +
-        link;
-
-    }
-
-  }
+    };
 
 
   /* =========================
-     REFERRAL DETECTION
+     ANONYMOUS LOGIN
   ========================= */
 
-  const params =
-    new URLSearchParams(
-      window.location.search
-    );
+  signInAnonymously(auth)
+    .catch(function(error) {
+
+      console.error(
+        "Firebase Auth error:",
+        error
+      );
 
 
-  const ref =
-    params.get("ref");
+      message.innerText =
+        "❌ Firebase login failed.";
+
+    });
 
 
-  if (ref) {
+  /* =========================
+     AUTH STATE
+  ========================= */
 
-    console.log(
-      "Referral detected:",
-      ref
-    );
+  onAuthStateChanged(
+    auth,
+    function(user) {
 
-  }
+      if (user) {
+
+        loadUser(user);
+
+      }
+
+    }
+  );
 
 </script>
 
