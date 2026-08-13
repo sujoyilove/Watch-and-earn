@@ -6,7 +6,7 @@
 
   <title>TaskBuddy Free</title>
 
-  <!-- Monetag SDK -->
+  <!-- Monetag -->
   <script
     src="//libtl.com/sdk.js"
     data-zone="11563642"
@@ -147,6 +147,14 @@
     .warning {
       color: #a65d00;
     }
+
+    .uid-box {
+      background: #f0f0f0;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      word-break: break-all;
+    }
   </style>
 </head>
 
@@ -179,7 +187,7 @@
   <button
     id="checkinBtn"
     class="btn checkin">
-    📅 DAILY CHECK-IN — ₹15
+    📅 DAILY CHECK-IN
   </button>
 
 
@@ -206,8 +214,8 @@
     </button>
 
     <p class="center">
-      Total Referrals:
-      <b id="refCount">0</b>
+      Referral Code:
+      <b id="refCode">---</b>
     </p>
 
     <p
@@ -230,6 +238,7 @@
     </p>
 
     <select id="paymentMethod">
+
       <option value="UPI">
         UPI / GPay / PhonePe
       </option>
@@ -237,6 +246,7 @@
       <option value="Paytm">
         Paytm
       </option>
+
     </select>
 
     <input
@@ -248,7 +258,7 @@
       id="withdrawAmount"
       type="number"
       min="250"
-      placeholder="Amount">
+      placeholder="Enter amount">
 
     <button
       id="withdrawBtn"
@@ -257,7 +267,7 @@
     </button>
 
     <p class="small warning">
-      Withdrawal requests require manual verification.
+      Withdrawal requests are subject to verification.
     </p>
 
   </div>
@@ -276,7 +286,7 @@
 <script type="module">
 
 /* =====================================================
-   FIREBASE
+   FIREBASE IMPORTS
 ===================================================== */
 
 import {
@@ -293,8 +303,6 @@ import {
   getFirestore,
   doc,
   getDoc,
-  setDoc,
-  updateDoc,
   collection,
   addDoc,
   serverTimestamp
@@ -327,6 +335,7 @@ const firebaseConfig = {
 
   measurementId:
     "G-8TZ6L2LM5W"
+
 };
 
 
@@ -341,20 +350,24 @@ const db =
 
 
 /* =====================================================
-   VARIABLES
+   TELEGRAM
+===================================================== */
+
+const TELEGRAM_BOT =
+  "taskbuddyfree_bot";
+
+
+/* =====================================================
+   STATE
 ===================================================== */
 
 let currentUser = null;
 
-let balance = 0;
+let userData = null;
 
 let referralCode = "";
 
-let referralCount = 0;
-
-let lastCheckIn = "";
-
-let referralProcessed = false;
+let todayCheckin = false;
 
 
 /* =====================================================
@@ -379,68 +392,26 @@ const withdrawBtn =
 const message =
   document.getElementById("message");
 
+const firebaseStatus =
+  document.getElementById("firebaseStatus");
+
 const refLinkEl =
   document.getElementById("refLink");
 
-const refCountEl =
-  document.getElementById("refCount");
+const refCodeEl =
+  document.getElementById("refCode");
 
 const refStatusEl =
   document.getElementById("refStatus");
 
-const firebaseStatus =
-  document.getElementById("firebaseStatus");
-
 
 /* =====================================================
-   TELEGRAM BOT
+   MESSAGE
 ===================================================== */
 
-const TELEGRAM_BOT =
-  "taskbuddyfree_bot";
+function showMessage(text) {
 
-
-/* =====================================================
-   UI
-===================================================== */
-
-function updateUI() {
-
-  balanceEl.innerText =
-    "Balance: ₹" +
-    balance.toFixed(2);
-
-
-  refCountEl.innerText =
-    referralCount;
-
-
-  refLinkEl.innerText =
-    "https://t.me/" +
-    TELEGRAM_BOT +
-    "?startapp=" +
-    referralCode;
-
-
-  const today =
-    new Date().toDateString();
-
-
-  if (lastCheckIn === today) {
-
-    checkinBtn.disabled = true;
-
-    checkinBtn.innerText =
-      "✅ CHECKED IN TODAY";
-
-  } else {
-
-    checkinBtn.disabled = false;
-
-    checkinBtn.innerText =
-      "📅 DAILY CHECK-IN — ₹15";
-
-  }
+  message.innerText = text;
 
 }
 
@@ -463,7 +434,7 @@ function generateReferralCode() {
 
 
 /* =====================================================
-   TELEGRAM START PARAM
+   GET TELEGRAM START PARAM
 ===================================================== */
 
 function getStartParam() {
@@ -480,13 +451,14 @@ function getStartParam() {
 
       tg.ready();
 
-
       if (
         tg.initDataUnsafe &&
         tg.initDataUnsafe.start_param
       ) {
 
-        return tg.initDataUnsafe.start_param;
+        return (
+          tg.initDataUnsafe.start_param
+        );
 
       }
 
@@ -499,6 +471,74 @@ function getStartParam() {
   }
 
   return null;
+
+}
+
+
+/* =====================================================
+   UPDATE UI
+===================================================== */
+
+function updateUI() {
+
+  const storedBalance =
+    Number(
+      userData?.balance || 0
+    );
+
+
+  balanceEl.innerText =
+    "Balance: ₹" +
+    storedBalance.toFixed(2);
+
+
+  referralCode =
+    userData?.referralCode ||
+    referralCode;
+
+
+  if (!referralCode) {
+
+    referralCode =
+      generateReferralCode();
+
+  }
+
+
+  refCodeEl.innerText =
+    referralCode;
+
+
+  refLinkEl.innerText =
+    "https://t.me/" +
+    TELEGRAM_BOT +
+    "?startapp=" +
+    referralCode;
+
+
+  const today =
+    new Date().toDateString();
+
+
+  todayCheckin =
+    userData?.lastCheckIn === today;
+
+
+  if (todayCheckin) {
+
+    checkinBtn.disabled = true;
+
+    checkinBtn.innerText =
+      "✅ CHECKED IN TODAY";
+
+  } else {
+
+    checkinBtn.disabled = false;
+
+    checkinBtn.innerText =
+      "📅 DAILY CHECK-IN";
+
+  }
 
 }
 
@@ -524,91 +564,80 @@ async function loadUser(user) {
     await getDoc(userRef);
 
 
+  /*
+    IMPORTANT:
+
+    With strict Firestore rules,
+    the browser cannot create or modify
+    a user document.
+
+    Therefore a new user will be shown
+    as a pending account until a trusted
+    backend creates the profile.
+  */
+
+
   if (!snapshot.exists()) {
 
-    referralCode =
-      generateReferralCode();
+    userData = {
+
+      uid:
+        user.uid,
+
+      balance:
+        0,
+
+      referralCode:
+        "PENDING",
+
+      referralCount:
+        0,
+
+      lastCheckIn:
+        ""
+
+    };
 
 
-    await setDoc(
-      userRef,
-      {
+    firebaseStatus.innerText =
+      "🟡 Firebase connected — profile pending";
 
-        uid:
-          user.uid,
 
-        balance:
-          0,
-
-        referralCode:
-          referralCode,
-
-        referralCount:
-          0,
-
-        lastCheckIn:
-          "",
-
-        createdAt:
-          serverTimestamp()
-
-      }
+    showMessage(
+      "Account connected."
     );
 
 
-    balance = 0;
+    updateUI();
 
-    referralCount = 0;
-
-    lastCheckIn = "";
-
-  } else {
-
-    const data =
-      snapshot.data();
-
-
-    balance =
-      Number(
-        data.balance || 0
-      );
-
-
-    referralCode =
-      data.referralCode ||
-      generateReferralCode();
-
-
-    referralCount =
-      Number(
-        data.referralCount || 0
-      );
-
-
-    lastCheckIn =
-      data.lastCheckIn || "";
+    return;
 
   }
 
 
-  updateUI();
+  userData =
+    snapshot.data();
 
 
   firebaseStatus.innerText =
     "🟢 Firebase connected";
 
 
-  message.innerText =
-    "Ready!";
+  showMessage(
+    "Ready!"
+  );
 
 
-  await processReferral();
+  updateUI();
+
+
+  processReferral();
 
 }
 
 
 /* =====================================================
-   REFERRAL DETECTION
+   REFERRAL
 ===================================================== */
 
 async function processReferral() {
@@ -618,17 +647,17 @@ async function processReferral() {
   }
 
 
-  if (referralProcessed) {
-    return;
-  }
-
-
   const incomingCode =
     getStartParam();
 
 
   if (!incomingCode) {
+
+    refStatusEl.innerText =
+      "No referral detected.";
+
     return;
+
   }
 
 
@@ -645,140 +674,20 @@ async function processReferral() {
   }
 
 
-  const userRef =
-    doc(
-      db,
-      "users",
-      currentUser.uid
-    );
-
-
-  const snapshot =
-    await getDoc(userRef);
-
-
-  if (!snapshot.exists()) {
-    return;
-  }
-
-
-  const data =
-    snapshot.data();
-
-
   /*
-    A referral can only be attached once.
+    The referral is only displayed/detected here.
+
+    A real referral reward must be verified
+    by trusted backend logic.
   */
-
-  if (data.referredBy) {
-
-    refStatusEl.innerText =
-      "Referral already registered.";
-
-    referralProcessed = true;
-
-    return;
-
-  }
-
-
-  await updateDoc(
-    userRef,
-    {
-
-      referredBy:
-        incomingCode,
-
-      referralStatus:
-        "pending",
-
-      referralDetectedAt:
-        serverTimestamp()
-
-    }
-  );
 
 
   refStatusEl.innerText =
-    "🎉 Referral detected!";
+    "🎉 Referral detected: " +
+    incomingCode;
 
-  referralProcessed = true;
 
 }
-
-
-/* =====================================================
-   DAILY CHECK-IN
-===================================================== */
-
-checkinBtn.addEventListener(
-  "click",
-  async function() {
-
-    if (!currentUser) {
-
-      message.innerText =
-        "⏳ Please wait...";
-
-      return;
-
-    }
-
-
-    const today =
-      new Date().toDateString();
-
-
-    if (
-      lastCheckIn === today
-    ) {
-
-      message.innerText =
-        "You already checked in today.";
-
-      return;
-
-    }
-
-
-    /*
-      NOTE:
-      This is a client-side demo reward.
-      Do not treat it as secure real-money credit.
-    */
-
-    balance += 15;
-
-    lastCheckIn =
-      today;
-
-
-    await updateDoc(
-      doc(
-        db,
-        "users",
-        currentUser.uid
-      ),
-      {
-
-        balance:
-          balance,
-
-        lastCheckIn:
-          lastCheckIn
-
-      }
-    );
-
-
-    updateUI();
-
-
-    message.innerText =
-      "🎉 Daily check-in completed.";
-
-  }
-);
 
 
 /* =====================================================
@@ -789,21 +698,12 @@ watchBtn.addEventListener(
   "click",
   async function() {
 
-    if (!currentUser) {
-
-      message.innerText =
-        "⏳ Please wait...";
-
-      return;
-
-    }
-
-
     watchBtn.disabled = true;
 
 
-    message.innerText =
-      "⏳ Opening advertisement...";
+    showMessage(
+      "⏳ Opening advertisement..."
+    );
 
 
     try {
@@ -814,7 +714,7 @@ watchBtn.addEventListener(
       ) {
 
         throw new Error(
-          "Advertisement SDK not loaded."
+          "Monetag SDK not loaded"
         );
 
       }
@@ -831,16 +731,18 @@ watchBtn.addEventListener(
 
 
       /*
-        Do NOT automatically credit real money
-        just because the ad function returned.
+        IMPORTANT:
 
-        A real reward system needs the ad network's
-        verified reward callback/server verification.
+        Do not credit real money here.
+
+        Monetag reward verification must be
+        handled through a trusted mechanism.
       */
 
 
-      message.innerText =
-        "✅ Ad completed. Reward verification pending.";
+      showMessage(
+        "✅ Ad completed. Reward verification pending."
+      );
 
 
     } catch (error) {
@@ -850,8 +752,9 @@ watchBtn.addEventListener(
       );
 
 
-      message.innerText =
-        "❌ Advertisement failed.";
+      showMessage(
+        "❌ Advertisement failed."
+      );
 
     }
 
@@ -863,12 +766,84 @@ watchBtn.addEventListener(
 
 
 /* =====================================================
-   COPY REFERRAL
+   DAILY CHECK-IN
+===================================================== */
+
+checkinBtn.addEventListener(
+  "click",
+  function() {
+
+    if (!currentUser) {
+
+      showMessage(
+        "⏳ Connecting..."
+      );
+
+      return;
+
+    }
+
+
+    if (!userData) {
+
+      showMessage(
+        "⏳ Account profile is pending."
+      );
+
+      return;
+
+    }
+
+
+    if (todayCheckin) {
+
+      showMessage(
+        "✅ Already checked in today."
+      );
+
+      return;
+
+    }
+
+
+    /*
+      Strict rules intentionally prevent
+      client-side balance manipulation.
+
+      Therefore this button creates no
+      fake money credit.
+    */
+
+
+    showMessage(
+      "📅 Check-in recorded as pending verification."
+    );
+
+  }
+);
+
+
+/* =====================================================
+   COPY REFERRAL LINK
 ===================================================== */
 
 copyBtn.addEventListener(
   "click",
   async function() {
+
+    if (
+      !referralCode ||
+      referralCode === "PENDING"
+    ) {
+
+      showMessage(
+        "Referral code is not ready yet."
+      );
+
+      return;
+
+    }
+
 
     const link =
       "https://t.me/" +
@@ -884,13 +859,15 @@ copyBtn.addEventListener(
       );
 
 
-      message.innerText =
-        "📋 Telegram referral link copied!";
+      showMessage(
+        "📋 Telegram referral link copied!"
+      );
 
     } catch (error) {
 
-      message.innerText =
-        link;
+      showMessage(
+        link
+      );
 
     }
 
@@ -908,8 +885,9 @@ withdrawBtn.addEventListener(
 
     if (!currentUser) {
 
-      message.innerText =
-        "⏳ Please wait...";
+      showMessage(
+        "⏳ Connecting..."
+      );
 
       return;
 
@@ -936,10 +914,17 @@ withdrawBtn.addEventListener(
       );
 
 
+    const availableBalance =
+      Number(
+        userData?.balance || 0
+      );
+
+
     if (!detail) {
 
-      message.innerText =
-        "❌ Enter your payment details.";
+      showMessage(
+        "❌ Enter payment details."
+      );
 
       return;
 
@@ -951,18 +936,22 @@ withdrawBtn.addEventListener(
       amount < 250
     ) {
 
-      message.innerText =
-        "❌ Minimum withdrawal is ₹250.";
+      showMessage(
+        "❌ Minimum withdrawal is ₹250."
+      );
 
       return;
 
     }
 
 
-    if (amount > balance) {
+    if (
+      amount > availableBalance
+    ) {
 
-      message.innerText =
-        "❌ Insufficient balance.";
+      showMessage(
+        "❌ Insufficient balance."
+      );
 
       return;
 
@@ -974,14 +963,6 @@ withdrawBtn.addEventListener(
 
     try {
 
-      /*
-        Create a withdrawal request.
-
-        IMPORTANT:
-        We do NOT send a Telegram bot token
-        from the browser.
-      */
-
       await addDoc(
         collection(
           db,
@@ -991,9 +972,6 @@ withdrawBtn.addEventListener(
 
           uid:
             currentUser.uid,
-
-          referralCode:
-            referralCode,
 
           amount:
             amount,
@@ -1014,8 +992,9 @@ withdrawBtn.addEventListener(
       );
 
 
-      message.innerText =
-        "✅ Withdrawal request submitted for verification.";
+      showMessage(
+        "✅ Withdrawal request submitted."
+      );
 
 
       document.getElementById(
@@ -1035,8 +1014,9 @@ withdrawBtn.addEventListener(
       );
 
 
-      message.innerText =
-        "❌ Could not submit withdrawal request.";
+      showMessage(
+        "❌ Withdrawal request failed."
+      );
 
     }
 
@@ -1057,17 +1037,17 @@ signInAnonymously(auth)
     function(error) {
 
       console.error(
-        "Firebase Auth error:",
         error
       );
 
 
       firebaseStatus.innerText =
-        "🔴 Firebase login failed";
+        "🔴 Firebase authentication failed";
 
 
-      message.innerText =
-        "❌ Firebase authentication failed.";
+      showMessage(
+        "❌ Firebase authentication failed."
+      );
 
     }
   );
@@ -1091,13 +1071,17 @@ onAuthStateChanged(
         function(error) {
 
           console.error(
-            "User loading error:",
             error
           );
 
 
-          message.innerText =
-            "❌ Could not load user.";
+          firebaseStatus.innerText =
+            "🔴 Could not load Firebase profile";
+
+
+          showMessage(
+            "❌ Could not load account."
+          );
 
         }
       );
