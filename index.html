@@ -14,45 +14,61 @@
   </script>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      padding: 30px 15px;
+      padding: 25px 15px;
       font-family: Arial, sans-serif;
-      text-align: center;
       background: #f5f5f5;
+      text-align: center;
     }
 
     .container {
-      max-width: 400px;
+      width: 100%;
+      max-width: 430px;
       margin: auto;
-      background: white;
-      padding: 25px 20px;
+      background: #fff;
+      padding: 22px 18px;
       border-radius: 18px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 5px 25px rgba(0,0,0,.10);
     }
 
     h1 {
+      margin: 5px 0 8px;
       font-size: 27px;
-      margin-bottom: 15px;
+    }
+
+    .subtitle {
+      color: #777;
+      font-size: 13px;
+      margin-bottom: 20px;
     }
 
     #balance {
-      font-size: 27px;
+      font-size: 30px;
       font-weight: bold;
       color: #16803c;
-      margin: 25px 0;
+      margin: 22px 0;
     }
 
     .btn {
       width: 100%;
-      padding: 15px;
-      border: none;
+      border: 0;
       border-radius: 10px;
+      padding: 14px;
+      margin-top: 10px;
       color: white;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 12px;
+    }
+
+    .btn:disabled {
+      background: #999 !important;
+      cursor: not-allowed;
     }
 
     .watch {
@@ -67,51 +83,69 @@
       background: #8e44ad;
     }
 
-    .btn:disabled {
-      background: #999;
-      cursor: not-allowed;
-    }
-
-    #message {
-      margin-top: 20px;
-      min-height: 25px;
-      font-size: 15px;
-      font-weight: bold;
+    .withdraw {
+      background: #2980b9;
     }
 
     .box {
-      margin-top: 25px;
-      padding: 18px;
-      background: #fafafa;
+      margin-top: 22px;
+      padding: 16px;
       border: 1px solid #eee;
+      background: #fafafa;
       border-radius: 12px;
       text-align: left;
     }
 
     .box h3 {
-      margin-top: 0;
+      margin: 0 0 10px;
       text-align: center;
     }
 
     .ref-link {
-      padding: 10px;
       background: #eee;
       border-radius: 7px;
+      padding: 10px;
       font-size: 12px;
       word-break: break-all;
       margin-top: 10px;
     }
 
-    .count {
+    .center {
       text-align: center;
-      margin-top: 12px;
-      font-size: 15px;
     }
 
-    .status {
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 9px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: white;
+      font-size: 14px;
+    }
+
+    #message {
+      min-height: 25px;
+      margin-top: 18px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    #firebaseStatus {
+      margin-top: 8px;
+      color: #777;
+      font-size: 12px;
+    }
+
+    .small {
       font-size: 12px;
       color: #777;
-      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    .warning {
+      color: #a65d00;
     }
   </style>
 </head>
@@ -120,29 +154,34 @@
 
 <div class="container">
 
-  <h1>💰 TaskBuddy Free</h1>
+  <h1>💰 TaskBuddy</h1>
+
+  <div class="subtitle">
+    Complete tasks and earn rewards
+  </div>
 
   <div id="balance">
     Balance: ₹0.00
   </div>
 
+
   <!-- WATCH AD -->
 
   <button
     id="watchBtn"
-    class="btn watch"
-    onclick="watchAd()">
+    class="btn watch">
     ▶️ WATCH AD
   </button>
+
 
   <!-- DAILY CHECK-IN -->
 
   <button
     id="checkinBtn"
-    class="btn checkin"
-    onclick="dailyCheckIn()">
-    📅 DAILY CHECK-IN
+    class="btn checkin">
+    📅 DAILY CHECK-IN — ₹15
   </button>
+
 
   <!-- REFERRAL -->
 
@@ -150,36 +189,85 @@
 
     <h3>👥 Refer & Earn</h3>
 
-    <p style="text-align:center;">
-      Invite friends using your Telegram referral link.
+    <p class="center small">
+      Share your Telegram Mini App referral link.
     </p>
 
     <div
       id="refLink"
       class="ref-link">
-      Creating referral link...
+      Loading...
     </div>
 
     <button
-      class="btn refer"
-      onclick="copyReferral()">
+      id="copyBtn"
+      class="btn refer">
       📋 COPY REFERRAL LINK
     </button>
 
-    <div class="count">
+    <p class="center">
       Total Referrals:
       <b id="refCount">0</b>
-    </div>
+    </p>
+
+    <p
+      id="refStatus"
+      class="center small">
+      No referral detected.
+    </p>
 
   </div>
+
+
+  <!-- WITHDRAW -->
+
+  <div class="box">
+
+    <h3>🏧 Withdraw</h3>
+
+    <p class="small center">
+      Minimum withdrawal: ₹250
+    </p>
+
+    <select id="paymentMethod">
+      <option value="UPI">
+        UPI / GPay / PhonePe
+      </option>
+
+      <option value="Paytm">
+        Paytm
+      </option>
+    </select>
+
+    <input
+      id="paymentDetail"
+      type="text"
+      placeholder="Enter UPI ID / Paytm number">
+
+    <input
+      id="withdrawAmount"
+      type="number"
+      min="250"
+      placeholder="Amount">
+
+    <button
+      id="withdrawBtn"
+      class="btn withdraw">
+      Request Withdrawal
+    </button>
+
+    <p class="small warning">
+      Withdrawal requests require manual verification.
+    </p>
+
+  </div>
+
 
   <div id="message">
-    Connecting to Firebase...
+    Connecting...
   </div>
 
-  <div
-    id="firebaseStatus"
-    class="status">
+  <div id="firebaseStatus">
   </div>
 
 </div>
@@ -187,218 +275,455 @@
 
 <script type="module">
 
-  /* =========================================
-     FIREBASE IMPORTS
-  ========================================= */
+/* =====================================================
+   FIREBASE
+===================================================== */
 
-  import {
-    initializeApp
-  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-  import {
-    getAuth,
-    signInAnonymously,
-    onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-
-  /* =========================================
-     FIREBASE CONFIG
-  ========================================= */
-
-  const firebaseConfig = {
-
-    apiKey:
-      "AIzaSyCWHhxS5KPF_qdVDn-ZcLs7pM66feuw7VE",
-
-    authDomain:
-      "task-buddy-free.firebaseapp.com",
-
-    projectId:
-      "task-buddy-free",
-
-    storageBucket:
-      "task-buddy-free.firebasestorage.app",
-
-    messagingSenderId:
-      "573084747627",
-
-    appId:
-      "1:573084747627:web:ee9991b118faebc306ae2e",
-
-    measurementId:
-      "G-8TZ6L2LM5W"
-
-  };
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  collection,
+  addDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
-  /* =========================================
-     INITIALIZE FIREBASE
-  ========================================= */
+/* =====================================================
+   FIREBASE CONFIG
+===================================================== */
 
-  const app =
-    initializeApp(firebaseConfig);
+const firebaseConfig = {
 
-  const auth =
-    getAuth(app);
+  apiKey:
+    "AIzaSyCWHhxS5KPF_qdVDn-ZcLs7pM66feuw7VE",
 
-  const db =
-    getFirestore(app);
+  authDomain:
+    "task-buddy-free.firebaseapp.com",
 
+  projectId:
+    "task-buddy-free",
 
-  /* =========================================
-     VARIABLES
-  ========================================= */
+  storageBucket:
+    "task-buddy-free.firebasestorage.app",
 
-  let currentUser = null;
+  messagingSenderId:
+    "573084747627",
 
-  let balance = 0;
+  appId:
+    "1:573084747627:web:ee9991b118faebc306ae2e",
 
-  let lastCheckIn = "";
-
-  let referralCode = "";
-
-  let referralCount = 0;
-
-
-  const watchBtn =
-    document.getElementById("watchBtn");
-
-  const checkinBtn =
-    document.getElementById("checkinBtn");
-
-  const message =
-    document.getElementById("message");
+  measurementId:
+    "G-8TZ6L2LM5W"
+};
 
 
-  /* =========================================
-     TELEGRAM BOT
-  ========================================= */
+const app =
+  initializeApp(firebaseConfig);
 
-  const TELEGRAM_BOT =
-    "taskbuddyfree_bot";
+const auth =
+  getAuth(app);
+
+const db =
+  getFirestore(app);
 
 
-  /* =========================================
-     GET TELEGRAM START PARAM
-  ========================================= */
+/* =====================================================
+   VARIABLES
+===================================================== */
 
-  function getTelegramStartParam() {
+let currentUser = null;
 
-    try {
+let balance = 0;
+
+let referralCode = "";
+
+let referralCount = 0;
+
+let lastCheckIn = "";
+
+let referralProcessed = false;
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const balanceEl =
+  document.getElementById("balance");
+
+const watchBtn =
+  document.getElementById("watchBtn");
+
+const checkinBtn =
+  document.getElementById("checkinBtn");
+
+const copyBtn =
+  document.getElementById("copyBtn");
+
+const withdrawBtn =
+  document.getElementById("withdrawBtn");
+
+const message =
+  document.getElementById("message");
+
+const refLinkEl =
+  document.getElementById("refLink");
+
+const refCountEl =
+  document.getElementById("refCount");
+
+const refStatusEl =
+  document.getElementById("refStatus");
+
+const firebaseStatus =
+  document.getElementById("firebaseStatus");
+
+
+/* =====================================================
+   TELEGRAM BOT
+===================================================== */
+
+const TELEGRAM_BOT =
+  "taskbuddyfree_bot";
+
+
+/* =====================================================
+   UI
+===================================================== */
+
+function updateUI() {
+
+  balanceEl.innerText =
+    "Balance: ₹" +
+    balance.toFixed(2);
+
+
+  refCountEl.innerText =
+    referralCount;
+
+
+  refLinkEl.innerText =
+    "https://t.me/" +
+    TELEGRAM_BOT +
+    "?startapp=" +
+    referralCode;
+
+
+  const today =
+    new Date().toDateString();
+
+
+  if (lastCheckIn === today) {
+
+    checkinBtn.disabled = true;
+
+    checkinBtn.innerText =
+      "✅ CHECKED IN TODAY";
+
+  } else {
+
+    checkinBtn.disabled = false;
+
+    checkinBtn.innerText =
+      "📅 DAILY CHECK-IN — ₹15";
+
+  }
+
+}
+
+
+/* =====================================================
+   GENERATE REFERRAL CODE
+===================================================== */
+
+function generateReferralCode() {
+
+  return (
+    "REF" +
+    Math.floor(
+      100000 +
+      Math.random() * 900000
+    )
+  );
+
+}
+
+
+/* =====================================================
+   TELEGRAM START PARAM
+===================================================== */
+
+function getStartParam() {
+
+  try {
+
+    if (
+      window.Telegram &&
+      window.Telegram.WebApp
+    ) {
+
+      const tg =
+        window.Telegram.WebApp;
+
+      tg.ready();
+
 
       if (
-        window.Telegram &&
-        window.Telegram.WebApp
+        tg.initDataUnsafe &&
+        tg.initDataUnsafe.start_param
       ) {
 
-        const tg =
-          window.Telegram.WebApp;
-
-        tg.ready();
-
-        if (
-          tg.initDataUnsafe &&
-          tg.initDataUnsafe.start_param
-        ) {
-
-          return tg.initDataUnsafe.start_param;
-
-        }
+        return tg.initDataUnsafe.start_param;
 
       }
 
-    } catch (error) {
+    }
 
-      console.log(
-        "Telegram start parameter unavailable",
-        error
+  } catch (error) {
+
+    console.log(error);
+
+  }
+
+  return null;
+
+}
+
+
+/* =====================================================
+   LOAD USER
+===================================================== */
+
+async function loadUser(user) {
+
+  currentUser = user;
+
+
+  const userRef =
+    doc(
+      db,
+      "users",
+      user.uid
+    );
+
+
+  const snapshot =
+    await getDoc(userRef);
+
+
+  if (!snapshot.exists()) {
+
+    referralCode =
+      generateReferralCode();
+
+
+    await setDoc(
+      userRef,
+      {
+
+        uid:
+          user.uid,
+
+        balance:
+          0,
+
+        referralCode:
+          referralCode,
+
+        referralCount:
+          0,
+
+        lastCheckIn:
+          "",
+
+        createdAt:
+          serverTimestamp()
+
+      }
+    );
+
+
+    balance = 0;
+
+    referralCount = 0;
+
+    lastCheckIn = "";
+
+  } else {
+
+    const data =
+      snapshot.data();
+
+
+    balance =
+      Number(
+        data.balance || 0
       );
+
+
+    referralCode =
+      data.referralCode ||
+      generateReferralCode();
+
+
+    referralCount =
+      Number(
+        data.referralCount || 0
+      );
+
+
+    lastCheckIn =
+      data.lastCheckIn || "";
+
+  }
+
+
+  updateUI();
+
+
+  firebaseStatus.innerText =
+    "🟢 Firebase connected";
+
+
+  message.innerText =
+    "Ready!";
+
+
+  await processReferral();
+
+}
+
+
+/* =====================================================
+   REFERRAL DETECTION
+===================================================== */
+
+async function processReferral() {
+
+  if (!currentUser) {
+    return;
+  }
+
+
+  if (referralProcessed) {
+    return;
+  }
+
+
+  const incomingCode =
+    getStartParam();
+
+
+  if (!incomingCode) {
+    return;
+  }
+
+
+  if (
+    incomingCode ===
+    referralCode
+  ) {
+
+    refStatusEl.innerText =
+      "❌ Self-referral is not allowed.";
+
+    return;
+
+  }
+
+
+  const userRef =
+    doc(
+      db,
+      "users",
+      currentUser.uid
+    );
+
+
+  const snapshot =
+    await getDoc(userRef);
+
+
+  if (!snapshot.exists()) {
+    return;
+  }
+
+
+  const data =
+    snapshot.data();
+
+
+  /*
+    A referral can only be attached once.
+  */
+
+  if (data.referredBy) {
+
+    refStatusEl.innerText =
+      "Referral already registered.";
+
+    referralProcessed = true;
+
+    return;
+
+  }
+
+
+  await updateDoc(
+    userRef,
+    {
+
+      referredBy:
+        incomingCode,
+
+      referralStatus:
+        "pending",
+
+      referralDetectedAt:
+        serverTimestamp()
+
+    }
+  );
+
+
+  refStatusEl.innerText =
+    "🎉 Referral detected!";
+
+  referralProcessed = true;
+
+}
+
+
+/* =====================================================
+   DAILY CHECK-IN
+===================================================== */
+
+checkinBtn.addEventListener(
+  "click",
+  async function() {
+
+    if (!currentUser) {
+
+      message.innerText =
+        "⏳ Please wait...";
+
+      return;
 
     }
 
-    return null;
-
-  }
-
-
-  /* =========================================
-     CREATE REFERRAL CODE
-  ========================================= */
-
-  function createReferralCode() {
-
-    return (
-      "REF" +
-      Math.floor(
-        100000 +
-        Math.random() * 900000
-      )
-    );
-
-  }
-
-
-  /* =========================================
-     REFERRAL LINK
-  ========================================= */
-
-  function getReferralLink() {
-
-    return (
-      "https://t.me/" +
-      TELEGRAM_BOT +
-      "?startapp=" +
-      referralCode
-    );
-
-  }
-
-
-  /* =========================================
-     UPDATE UI
-  ========================================= */
-
-  function updateUI() {
-
-    document.getElementById(
-      "balance"
-    ).innerText =
-      "Balance: ₹" +
-      balance.toFixed(2);
-
-
-    document.getElementById(
-      "refLink"
-    ).innerText =
-      getReferralLink();
-
-
-    document.getElementById(
-      "refCount"
-    ).innerText =
-      referralCount;
-
-
-    updateCheckInButton();
-
-  }
-
-
-  /* =========================================
-     CHECK-IN BUTTON
-  ========================================= */
-
-  function updateCheckInButton() {
 
     const today =
       new Date().toDateString();
@@ -408,542 +733,377 @@
       lastCheckIn === today
     ) {
 
-      checkinBtn.disabled = true;
+      message.innerText =
+        "You already checked in today.";
 
-      checkinBtn.innerText =
-        "✅ CHECKED IN TODAY";
-
-    } else {
-
-      checkinBtn.disabled = false;
-
-      checkinBtn.innerText =
-        "📅 DAILY CHECK-IN";
+      return;
 
     }
 
-  }
+
+    /*
+      NOTE:
+      This is a client-side demo reward.
+      Do not treat it as secure real-money credit.
+    */
+
+    balance += 15;
+
+    lastCheckIn =
+      today;
 
 
-  /* =========================================
-     LOAD USER
-  ========================================= */
-
-  async function loadUser(user) {
-
-    currentUser = user;
-
-
-    const userRef =
+    await updateDoc(
       doc(
         db,
         "users",
-        user.uid
-      );
+        currentUser.uid
+      ),
+      {
 
+        balance:
+          balance,
 
-    const snapshot =
-      await getDoc(userRef);
+        lastCheckIn:
+          lastCheckIn
 
-
-    if (!snapshot.exists()) {
-
-      referralCode =
-        createReferralCode();
-
-      balance = 0;
-
-      lastCheckIn = "";
-
-      referralCount = 0;
-
-
-      await setDoc(
-        userRef,
-        {
-          uid:
-            user.uid,
-
-          balance:
-            0,
-
-          referralCode:
-            referralCode,
-
-          referralCount:
-            0,
-
-          lastCheckIn:
-            "",
-
-          createdAt:
-            serverTimestamp()
-        }
-      );
-
-    } else {
-
-      const data =
-        snapshot.data();
-
-
-      balance =
-        Number(
-          data.balance || 0
-        );
-
-
-      referralCode =
-        data.referralCode ||
-        createReferralCode();
-
-
-      referralCount =
-        Number(
-          data.referralCount || 0
-        );
-
-
-      lastCheckIn =
-        data.lastCheckIn || "";
-
-    }
+      }
+    );
 
 
     updateUI();
 
 
-    document.getElementById(
-      "firebaseStatus"
-    ).innerText =
-      "🟢 Firebase connected";
+    message.innerText =
+      "🎉 Daily check-in completed.";
+
+  }
+);
+
+
+/* =====================================================
+   WATCH AD
+===================================================== */
+
+watchBtn.addEventListener(
+  "click",
+  async function() {
+
+    if (!currentUser) {
+
+      message.innerText =
+        "⏳ Please wait...";
+
+      return;
+
+    }
+
+
+    watchBtn.disabled = true;
 
 
     message.innerText =
-      "Ready to earn!";
-
-
-    await processIncomingReferral();
-
-  }
-
-
-  /* =========================================
-     BASIC REFERRAL DETECTION
-  ========================================= */
-
-  async function processIncomingReferral() {
-
-    if (!currentUser) {
-      return;
-    }
-
-
-    const incomingReferral =
-      getTelegramStartParam();
-
-
-    if (!incomingReferral) {
-      return;
-    }
-
-
-    /* Prevent self-referral */
-
-    if (
-      incomingReferral ===
-      referralCode
-    ) {
-
-      return;
-
-    }
-
-
-    /* Prevent repeated referral */
-
-    const alreadyUsed =
-      localStorage.getItem(
-        "referralUsed"
-      );
-
-
-    if (alreadyUsed) {
-      return;
-    }
+      "⏳ Opening advertisement...";
 
 
     try {
 
-      const userRef =
-        doc(
+      if (
+        typeof show_11563642 !==
+        "function"
+      ) {
+
+        throw new Error(
+          "Advertisement SDK not loaded."
+        );
+
+      }
+
+
+      const result =
+        await show_11563642();
+
+
+      console.log(
+        "Ad result:",
+        result
+      );
+
+
+      /*
+        Do NOT automatically credit real money
+        just because the ad function returned.
+
+        A real reward system needs the ad network's
+        verified reward callback/server verification.
+      */
+
+
+      message.innerText =
+        "✅ Ad completed. Reward verification pending.";
+
+
+    } catch (error) {
+
+      console.error(
+        error
+      );
+
+
+      message.innerText =
+        "❌ Advertisement failed.";
+
+    }
+
+
+    watchBtn.disabled = false;
+
+  }
+);
+
+
+/* =====================================================
+   COPY REFERRAL
+===================================================== */
+
+copyBtn.addEventListener(
+  "click",
+  async function() {
+
+    const link =
+      "https://t.me/" +
+      TELEGRAM_BOT +
+      "?startapp=" +
+      referralCode;
+
+
+    try {
+
+      await navigator.clipboard.writeText(
+        link
+      );
+
+
+      message.innerText =
+        "📋 Telegram referral link copied!";
+
+    } catch (error) {
+
+      message.innerText =
+        link;
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   WITHDRAWAL REQUEST
+===================================================== */
+
+withdrawBtn.addEventListener(
+  "click",
+  async function() {
+
+    if (!currentUser) {
+
+      message.innerText =
+        "⏳ Please wait...";
+
+      return;
+
+    }
+
+
+    const method =
+      document.getElementById(
+        "paymentMethod"
+      ).value;
+
+
+    const detail =
+      document.getElementById(
+        "paymentDetail"
+      ).value.trim();
+
+
+    const amount =
+      Number(
+        document.getElementById(
+          "withdrawAmount"
+        ).value
+      );
+
+
+    if (!detail) {
+
+      message.innerText =
+        "❌ Enter your payment details.";
+
+      return;
+
+    }
+
+
+    if (
+      !Number.isFinite(amount) ||
+      amount < 250
+    ) {
+
+      message.innerText =
+        "❌ Minimum withdrawal is ₹250.";
+
+      return;
+
+    }
+
+
+    if (amount > balance) {
+
+      message.innerText =
+        "❌ Insufficient balance.";
+
+      return;
+
+    }
+
+
+    withdrawBtn.disabled = true;
+
+
+    try {
+
+      /*
+        Create a withdrawal request.
+
+        IMPORTANT:
+        We do NOT send a Telegram bot token
+        from the browser.
+      */
+
+      await addDoc(
+        collection(
           db,
-          "users",
-          currentUser.uid
-        );
-
-
-      const snapshot =
-        await getDoc(userRef);
-
-
-      if (!snapshot.exists()) {
-        return;
-      }
-
-
-      const data =
-        snapshot.data();
-
-
-      /*
-        If referral already exists,
-        do not overwrite it.
-      */
-
-      if (data.referredBy) {
-
-        localStorage.setItem(
-          "referralUsed",
-          "true"
-        );
-
-        return;
-
-      }
-
-
-      /*
-        Save referral relationship
-        to the new user's document.
-      */
-
-      await updateDoc(
-        userRef,
+          "withdrawalRequests"
+        ),
         {
 
-          referredBy:
-            incomingReferral,
+          uid:
+            currentUser.uid,
 
-          referralStatus:
+          referralCode:
+            referralCode,
+
+          amount:
+            amount,
+
+          method:
+            method,
+
+          paymentDetail:
+            detail,
+
+          status:
             "pending",
 
-          referralDetectedAt:
+          createdAt:
             serverTimestamp()
 
         }
       );
 
 
-      localStorage.setItem(
-        "referralUsed",
-        "true"
-      );
-
-
       message.innerText =
-        "🎉 Referral detected successfully!";
+        "✅ Withdrawal request submitted for verification.";
+
+
+      document.getElementById(
+        "paymentDetail"
+      ).value = "";
+
+
+      document.getElementById(
+        "withdrawAmount"
+      ).value = "";
 
 
     } catch (error) {
 
       console.error(
-        "Referral error:",
         error
       );
 
 
       message.innerText =
-        "❌ Referral could not be saved.";
+        "❌ Could not submit withdrawal request.";
 
     }
 
+
+    withdrawBtn.disabled = false;
+
   }
+);
 
 
-  /* =========================================
-     DAILY CHECK-IN
-  ========================================= */
+/* =====================================================
+   ANONYMOUS AUTH
+===================================================== */
 
-  window.dailyCheckIn =
-    async function() {
+signInAnonymously(auth)
 
-      if (!currentUser) {
-
-        message.innerText =
-          "⏳ Firebase is connecting...";
-
-        return;
-
-      }
-
-
-      const today =
-        new Date().toDateString();
-
-
-      if (
-        lastCheckIn === today
-      ) {
-
-        message.innerText =
-          "ℹ️ You already checked in today.";
-
-        return;
-
-      }
-
-
-      /*
-        TEST REWARD ONLY
-      */
-
-      balance += 15;
-
-      lastCheckIn =
-        today;
-
-
-      await updateDoc(
-        doc(
-          db,
-          "users",
-          currentUser.uid
-        ),
-        {
-
-          balance:
-            balance,
-
-          lastCheckIn:
-            lastCheckIn
-
-        }
-      );
-
-
-      updateUI();
-
-
-      message.innerText =
-        "🎉 Daily Check-in complete! ₹15.00 added.";
-
-    };
-
-
-  /* =========================================
-     WATCH AD
-  ========================================= */
-
-  window.watchAd =
-    async function() {
-
-      if (!currentUser) {
-
-        message.innerText =
-          "⏳ Firebase is connecting...";
-
-        return;
-
-      }
-
-
-      watchBtn.disabled = true;
-
-      message.innerText =
-        "⏳ Opening advertisement...";
-
-
-      try {
-
-        if (
-          typeof show_11563642 !==
-          "function"
-        ) {
-
-          throw new Error(
-            "Monetag SDK not loaded"
-          );
-
-        }
-
-
-        const event =
-          await show_11563642({
-
-            ymid:
-              currentUser.uid,
-
-            requestVar:
-              "watch_ad"
-
-          });
-
-
-        console.log(
-          "Monetag event:",
-          event
-        );
-
-
-        if (
-          event &&
-          event.reward_event_type ===
-          "valued"
-        ) {
-
-          /*
-            TEST REWARD ONLY.
-            Real monetary rewards require
-            server-side verification.
-          */
-
-          balance += 3;
-
-
-          await updateDoc(
-            doc(
-              db,
-              "users",
-              currentUser.uid
-            ),
-            {
-
-              balance:
-                balance
-
-            }
-          );
-
-
-          updateUI();
-
-
-          message.innerText =
-            "✅ Ad reward confirmed! ₹3.00 added.";
-
-        } else {
-
-          message.innerText =
-            "ℹ️ Ad finished, but no verified reward was received.";
-
-        }
-
-
-      } catch (error) {
-
-        console.error(
-          "Advertisement error:",
-          error
-        );
-
-
-        message.innerText =
-          "❌ Advertisement could not be completed.";
-
-      }
-
-
-      watchBtn.disabled = false;
-
-    };
-
-
-  /* =========================================
-     COPY REFERRAL
-  ========================================= */
-
-  window.copyReferral =
-    function() {
-
-      const link =
-        getReferralLink();
-
-
-      if (
-        navigator.clipboard &&
-        navigator.clipboard.writeText
-      ) {
-
-        navigator.clipboard
-          .writeText(link)
-          .then(function() {
-
-            message.innerText =
-              "📋 Telegram referral link copied!";
-
-          })
-          .catch(function() {
-
-            message.innerText =
-              "❌ Could not copy referral link.";
-
-          });
-
-      } else {
-
-        message.innerText =
-          "📋 Copy this link: " +
-          link;
-
-      }
-
-    };
-
-
-  /* =========================================
-     FIREBASE LOGIN
-  ========================================= */
-
-  signInAnonymously(auth)
-    .catch(function(error) {
+  .catch(
+    function(error) {
 
       console.error(
-        "Anonymous login error:",
+        "Firebase Auth error:",
         error
       );
 
 
-      message.innerText =
-        "❌ Firebase login failed.";
-
-
-      document.getElementById(
-        "firebaseStatus"
-      ).innerText =
+      firebaseStatus.innerText =
         "🔴 Firebase login failed";
 
-    });
 
-
-  /* =========================================
-     AUTH STATE
-  ========================================= */
-
-  onAuthStateChanged(
-    auth,
-    function(user) {
-
-      if (user) {
-
-        loadUser(user)
-          .catch(function(error) {
-
-            console.error(
-              "User loading error:",
-              error
-            );
-
-
-            message.innerText =
-              "❌ Could not load user data.";
-
-          });
-
-      }
+      message.innerText =
+        "❌ Firebase authentication failed.";
 
     }
   );
+
+
+/* =====================================================
+   AUTH STATE
+===================================================== */
+
+onAuthStateChanged(
+  auth,
+  function(user) {
+
+    if (!user) {
+      return;
+    }
+
+
+    loadUser(user)
+      .catch(
+        function(error) {
+
+          console.error(
+            "User loading error:",
+            error
+          );
+
+
+          message.innerText =
+            "❌ Could not load user.";
+
+        }
+      );
+
+  }
+);
 
 </script>
 
