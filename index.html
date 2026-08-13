@@ -2,1094 +2,509 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>TaskBuddy Free</title>
 
+  <!-- Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <!-- Monetag -->
-  <script
-    src="//libtl.com/sdk.js"
-    data-zone="11563642"
-    data-sdk="show_11563642">
-  </script>
+  <script src="//libtl.com/sdk.js" data-zone="11563642" data-sdk="show_11563642"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      margin: 0;
-      padding: 25px 15px;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: var(--tg-theme-bg-color, #f5f5f5);
+      color: var(--tg-theme-text-color, #000);
+      padding: 16px;
+      min-height: 100vh;
     }
 
     .container {
-      width: 100%;
-      max-width: 430px;
-      margin: auto;
-      background: #fff;
-      padding: 22px 18px;
-      border-radius: 18px;
-      box-shadow: 0 5px 25px rgba(0,0,0,.10);
+      max-width: 420px;
+      margin: 0 auto;
+      background: var(--tg-theme-secondary-bg-color, #fff);
+      border-radius: 16px;
+      padding: 20px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
 
     h1 {
-      margin: 5px 0 8px;
-      font-size: 27px;
+      text-align: center;
+      font-size: 26px;
+      margin-bottom: 4px;
     }
 
     .subtitle {
-      color: #777;
+      text-align: center;
+      color: #888;
       font-size: 13px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     #balance {
-      font-size: 30px;
-      font-weight: bold;
-      color: #16803c;
-      margin: 22px 0;
+      text-align: center;
+      font-size: 32px;
+      font-weight: 700;
+      color: #16a34a;
+      margin: 16px 0 20px;
     }
 
     .btn {
       width: 100%;
-      border: 0;
-      border-radius: 10px;
+      border: none;
+      border-radius: 12px;
       padding: 14px;
       margin-top: 10px;
       color: white;
       font-size: 16px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
+      transition: opacity 0.2s;
     }
 
+    .btn:active { opacity: 0.85; }
     .btn:disabled {
-      background: #999 !important;
+      background: #9ca3af !important;
       cursor: not-allowed;
+      opacity: 0.7;
     }
 
-    .watch {
-      background: #16803c;
-    }
-
-    .checkin {
-      background: #e67e22;
-    }
-
-    .refer {
-      background: #8e44ad;
-    }
-
-    .withdraw {
-      background: #2980b9;
-    }
+    .watch { background: #16a34a; }
+    .checkin { background: #ea580c; }
+    .refer { background: #7c3aed; }
+    .withdraw { background: #2563eb; }
 
     .box {
-      margin-top: 22px;
+      margin-top: 20px;
       padding: 16px;
-      border: 1px solid #eee;
-      background: #fafafa;
-      border-radius: 12px;
-      text-align: left;
+      background: #f8fafc;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
     }
 
     .box h3 {
-      margin: 0 0 10px;
       text-align: center;
+      margin-bottom: 10px;
+      font-size: 16px;
     }
 
     .ref-link {
-      background: #eee;
-      border-radius: 7px;
+      background: #e2e8f0;
+      border-radius: 8px;
       padding: 10px;
       font-size: 12px;
       word-break: break-all;
-      margin-top: 10px;
-    }
-
-    .center {
+      margin: 10px 0;
       text-align: center;
     }
 
-    input,
-    select {
+    .center { text-align: center; }
+    .small { font-size: 12px; color: #64748b; line-height: 1.5; }
+
+    input, select {
       width: 100%;
       padding: 12px;
-      margin-top: 9px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: white;
+      margin-top: 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
       font-size: 14px;
+      background: white;
     }
 
     #message {
-      min-height: 25px;
-      margin-top: 18px;
+      text-align: center;
+      min-height: 22px;
+      margin-top: 16px;
       font-size: 14px;
-      font-weight: bold;
+      font-weight: 600;
+      color: #334155;
     }
 
     #firebaseStatus {
-      margin-top: 8px;
-      color: #777;
-      font-size: 12px;
+      text-align: center;
+      margin-top: 6px;
+      font-size: 11px;
+      color: #94a3b8;
     }
 
-    .small {
-      font-size: 12px;
-      color: #777;
-      line-height: 1.5;
-    }
-
-    .warning {
-      color: #a65d00;
-    }
-
-    .uid-box {
-      background: #f0f0f0;
-      padding: 8px;
-      border-radius: 6px;
-      font-size: 10px;
-      word-break: break-all;
-    }
+    .warning { color: #b45309; margin-top: 8px; }
   </style>
 </head>
-
 <body>
 
 <div class="container">
-
   <h1>💰 TaskBuddy</h1>
+  <div class="subtitle">Complete tasks and earn rewards</div>
 
-  <div class="subtitle">
-    Complete tasks and earn rewards
-  </div>
+  <div id="balance">Balance: ₹0.00</div>
 
-  <div id="balance">
-    Balance: ₹0.00
-  </div>
+  <button id="watchBtn" class="btn watch">▶️ WATCH AD (+₹1.00)</button>
+  <button id="checkinBtn" class="btn checkin">📅 DAILY CHECK-IN (+₹10.00)</button>
 
-
-  <!-- WATCH AD -->
-
-  <button
-    id="watchBtn"
-    class="btn watch">
-    ▶️ WATCH AD
-  </button>
-
-
-  <!-- DAILY CHECK-IN -->
-
-  <button
-    id="checkinBtn"
-    class="btn checkin">
-    📅 DAILY CHECK-IN
-  </button>
-
-
-  <!-- REFERRAL -->
-
+  <!-- Referral -->
   <div class="box">
-
     <h3>👥 Refer & Earn</h3>
-
-    <p class="center small">
-      Share your Telegram Mini App referral link.
+    <p class="center small">Share your link and earn when friends join</p>
+    <div id="refLink" class="ref-link">Loading...</div>
+    <button id="copyBtn" class="btn refer">📋 COPY REFERRAL LINK</button>
+    <p class="center" style="margin-top:10px;">
+      Your Code: <b id="refCode">---</b>
     </p>
-
-    <div
-      id="refLink"
-      class="ref-link">
-      Loading...
-    </div>
-
-    <button
-      id="copyBtn"
-      class="btn refer">
-      📋 COPY REFERRAL LINK
-    </button>
-
-    <p class="center">
-      Referral Code:
-      <b id="refCode">---</b>
-    </p>
-
-    <p
-      id="refStatus"
-      class="center small">
-      No referral detected.
-    </p>
-
+    <p id="refStatus" class="center small">No referral detected.</p>
   </div>
 
-
-  <!-- WITHDRAW -->
-
+  <!-- Withdraw -->
   <div class="box">
-
     <h3>🏧 Withdraw</h3>
-
-    <p class="small center">
-      Minimum withdrawal: ₹250
-    </p>
+    <p class="small center">Minimum withdrawal: ₹250</p>
 
     <select id="paymentMethod">
-
-      <option value="UPI">
-        UPI / GPay / PhonePe
-      </option>
-
-      <option value="Paytm">
-        Paytm
-      </option>
-
+      <option value="UPI">UPI / GPay / PhonePe</option>
+      <option value="Paytm">Paytm</option>
     </select>
 
-    <input
-      id="paymentDetail"
-      type="text"
-      placeholder="Enter UPI ID / Paytm number">
+    <input id="paymentDetail" type="text" placeholder="Enter UPI ID / Paytm number">
+    <input id="withdrawAmount" type="number" min="250" placeholder="Enter amount (min 250)">
 
-    <input
-      id="withdrawAmount"
-      type="number"
-      min="250"
-      placeholder="Enter amount">
-
-    <button
-      id="withdrawBtn"
-      class="btn withdraw">
-      Request Withdrawal
-    </button>
-
-    <p class="small warning">
-      Withdrawal requests are subject to verification.
-    </p>
-
+    <button id="withdrawBtn" class="btn withdraw">Request Withdrawal</button>
+    <p class="small warning center">Withdrawal requests are subject to verification.</p>
   </div>
 
-
-  <div id="message">
-    Connecting...
-  </div>
-
-  <div id="firebaseStatus">
-  </div>
-
+  <div id="message">Connecting...</div>
+  <div id="firebaseStatus"></div>
 </div>
 
-
 <script type="module">
-
-/* =====================================================
-   FIREBASE IMPORTS
-===================================================== */
-
+/* ===================== FIREBASE ===================== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-
-import {
-  getAuth,
-  signInAnonymously,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  collection,
-  addDoc,
-  serverTimestamp
+  getFirestore, doc, getDoc, setDoc, updateDoc,
+  collection, addDoc, serverTimestamp, increment
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-
-/* =====================================================
-   FIREBASE CONFIG
-===================================================== */
-
 const firebaseConfig = {
-
-  apiKey:
-    "AIzaSyCWHhxS5KPF_qdVDn-ZcLs7pM66feuw7VE",
-
-  authDomain:
-    "task-buddy-free.firebaseapp.com",
-
-  projectId:
-    "task-buddy-free",
-
-  storageBucket:
-    "task-buddy-free.firebasestorage.app",
-
-  messagingSenderId:
-    "573084747627",
-
-  appId:
-    "1:573084747627:web:ee9991b118faebc306ae2e",
-
-  measurementId:
-    "G-8TZ6L2LM5W"
-
+  apiKey: "AIzaSyCWHhxS5KPF_qdVDn-ZcLs7pM66feuw7VE",
+  authDomain: "task-buddy-free.firebaseapp.com",
+  projectId: "task-buddy-free",
+  storageBucket: "task-buddy-free.firebasestorage.app",
+  messagingSenderId: "573084747627",
+  appId: "1:573084747627:web:ee9991b118faebc306ae2e",
+  measurementId: "G-8TZ6L2LM5W"
 };
 
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const app =
-  initializeApp(firebaseConfig);
+/* ===================== TELEGRAM ===================== */
+const TELEGRAM_BOT = "taskbuddyfree_bot";
+const tg = window.Telegram?.WebApp;
 
-const auth =
-  getAuth(app);
+if (tg) {
+  tg.ready();
+  tg.expand();
+  document.body.style.background = tg.themeParams.bg_color || "#f5f5f5";
+}
 
-const db =
-  getFirestore(app);
-
-
-/* =====================================================
-   TELEGRAM
-===================================================== */
-
-const TELEGRAM_BOT =
-  "taskbuddyfree_bot";
-
-
-/* =====================================================
-   STATE
-===================================================== */
-
+/* ===================== STATE ===================== */
 let currentUser = null;
-
 let userData = null;
-
 let referralCode = "";
-
 let todayCheckin = false;
 
-
-/* =====================================================
-   ELEMENTS
-===================================================== */
-
-const balanceEl =
-  document.getElementById("balance");
-
-const watchBtn =
-  document.getElementById("watchBtn");
-
-const checkinBtn =
-  document.getElementById("checkinBtn");
-
-const copyBtn =
-  document.getElementById("copyBtn");
-
-const withdrawBtn =
-  document.getElementById("withdrawBtn");
-
-const message =
-  document.getElementById("message");
-
-const firebaseStatus =
-  document.getElementById("firebaseStatus");
-
-const refLinkEl =
-  document.getElementById("refLink");
-
-const refCodeEl =
-  document.getElementById("refCode");
-
-const refStatusEl =
-  document.getElementById("refStatus");
-
-
-/* =====================================================
-   MESSAGE
-===================================================== */
+/* ===================== ELEMENTS ===================== */
+const balanceEl = document.getElementById("balance");
+const watchBtn = document.getElementById("watchBtn");
+const checkinBtn = document.getElementById("checkinBtn");
+const copyBtn = document.getElementById("copyBtn");
+const withdrawBtn = document.getElementById("withdrawBtn");
+const message = document.getElementById("message");
+const firebaseStatus = document.getElementById("firebaseStatus");
+const refLinkEl = document.getElementById("refLink");
+const refCodeEl = document.getElementById("refCode");
+const refStatusEl = document.getElementById("refStatus");
 
 function showMessage(text) {
-
   message.innerText = text;
-
 }
-
-
-/* =====================================================
-   GENERATE REFERRAL CODE
-===================================================== */
 
 function generateReferralCode() {
-
-  return (
-    "REF" +
-    Math.floor(
-      100000 +
-      Math.random() * 900000
-    )
-  );
-
+  return "REF" + Math.floor(100000 + Math.random() * 900000);
 }
-
-
-/* =====================================================
-   GET TELEGRAM START PARAM
-===================================================== */
 
 function getStartParam() {
-
   try {
-
-    if (
-      window.Telegram &&
-      window.Telegram.WebApp
-    ) {
-
-      const tg =
-        window.Telegram.WebApp;
-
-      tg.ready();
-
-      if (
-        tg.initDataUnsafe &&
-        tg.initDataUnsafe.start_param
-      ) {
-
-        return (
-          tg.initDataUnsafe.start_param
-        );
-
-      }
-
+    if (tg?.initDataUnsafe?.start_param) {
+      return tg.initDataUnsafe.start_param;
     }
-
-  } catch (error) {
-
-    console.log(error);
-
-  }
-
+  } catch (e) {}
   return null;
-
 }
 
-
-/* =====================================================
-   UPDATE UI
-===================================================== */
-
+/* ===================== UI UPDATE ===================== */
 function updateUI() {
+  const bal = Number(userData?.balance || 0);
+  balanceEl.innerText = "Balance: ₹" + bal.toFixed(2);
 
-  const storedBalance =
-    Number(
-      userData?.balance || 0
-    );
-
-
-  balanceEl.innerText =
-    "Balance: ₹" +
-    storedBalance.toFixed(2);
-
-
-  referralCode =
-    userData?.referralCode ||
-    referralCode;
-
-
-  if (!referralCode) {
-
-    referralCode =
-      generateReferralCode();
-
+  referralCode = userData?.referralCode || referralCode;
+  if (!referralCode || referralCode === "PENDING") {
+    referralCode = generateReferralCode();
   }
 
+  refCodeEl.innerText = referralCode;
+  refLinkEl.innerText = `https://t.me/\( {TELEGRAM_BOT}?startapp= \){referralCode}`;
 
-  refCodeEl.innerText =
-    referralCode;
-
-
-  refLinkEl.innerText =
-    "https://t.me/" +
-    TELEGRAM_BOT +
-    "?startapp=" +
-    referralCode;
-
-
-  const today =
-    new Date().toDateString();
-
-
-  todayCheckin =
-    userData?.lastCheckIn === today;
-
+  const today = new Date().toDateString();
+  todayCheckin = userData?.lastCheckIn === today;
 
   if (todayCheckin) {
-
     checkinBtn.disabled = true;
-
-    checkinBtn.innerText =
-      "✅ CHECKED IN TODAY";
-
+    checkinBtn.innerText = "✅ CHECKED IN TODAY";
   } else {
-
     checkinBtn.disabled = false;
-
-    checkinBtn.innerText =
-      "📅 DAILY CHECK-IN";
-
+    checkinBtn.innerText = "📅 DAILY CHECK-IN (+₹10.00)";
   }
-
 }
 
-
-/* =====================================================
-   LOAD USER
-===================================================== */
-
+/* ===================== LOAD / CREATE USER ===================== */
 async function loadUser(user) {
-
   currentUser = user;
-
-
-  const userRef =
-    doc(
-      db,
-      "users",
-      user.uid
-    );
-
-
-  const snapshot =
-    await getDoc(userRef);
-
-
-  /*
-    IMPORTANT:
-
-    With strict Firestore rules,
-    the browser cannot create or modify
-    a user document.
-
-    Therefore a new user will be shown
-    as a pending account until a trusted
-    backend creates the profile.
-  */
-
+  const userRef = doc(db, "users", user.uid);
+  const snapshot = await getDoc(userRef);
 
   if (!snapshot.exists()) {
-
-    userData = {
-
-      uid:
-        user.uid,
-
-      balance:
-        0,
-
-      referralCode:
-        "PENDING",
-
-      referralCount:
-        0,
-
-      lastCheckIn:
-        ""
-
+    const newCode = generateReferralCode();
+    const newUser = {
+      uid: user.uid,
+      balance: 0,
+      referralCode: newCode,
+      referralCount: 0,
+      lastCheckIn: "",
+      createdAt: serverTimestamp(),
+      referredBy: null
     };
 
+    await setDoc(userRef, newUser);
+    userData = newUser;
+    referralCode = newCode;
 
-    firebaseStatus.innerText =
-      "🟡 Firebase connected — profile pending";
-
-
-    showMessage(
-      "Account connected."
-    );
-
-
-    updateUI();
-
-    return;
-
+    firebaseStatus.innerText = "🟢 New account created";
+    showMessage("Welcome! Account created.");
+  } else {
+    userData = snapshot.data();
+    firebaseStatus.innerText = "🟢 Firebase connected";
+    showMessage("Ready!");
   }
-
-
-  userData =
-    snapshot.data();
-
-
-  firebaseStatus.innerText =
-    "🟢 Firebase connected";
-
-
-  showMessage(
-    "Ready!"
-  );
-
 
   updateUI();
-
-
-  processReferral();
-
+  await processReferral();
 }
 
-
-/* =====================================================
-   REFERRAL
-===================================================== */
-
+/* ===================== REFERRAL ===================== */
 async function processReferral() {
+  if (!currentUser || !userData) return;
 
-  if (!currentUser) {
-    return;
-  }
-
-
-  const incomingCode =
-    getStartParam();
-
-
+  const incomingCode = getStartParam();
   if (!incomingCode) {
-
-    refStatusEl.innerText =
-      "No referral detected.";
-
+    refStatusEl.innerText = "No referral detected.";
     return;
-
   }
 
-
-  if (
-    incomingCode ===
-    referralCode
-  ) {
-
-    refStatusEl.innerText =
-      "❌ Self-referral is not allowed.";
-
+  if (incomingCode === userData.referralCode) {
+    refStatusEl.innerText = "❌ Self-referral not allowed.";
     return;
-
   }
 
+  if (userData.referredBy) {
+    refStatusEl.innerText = "Already referred by someone.";
+    return;
+  }
 
-  /*
-    The referral is only displayed/detected here.
+  try {
+    const userRef = doc(db, "users", currentUser.uid);
+    await updateDoc(userRef, {
+      referredBy: incomingCode
+    });
 
-    A real referral reward must be verified
-    by trusted backend logic.
-  */
-
-
-  refStatusEl.innerText =
-    "🎉 Referral detected: " +
-    incomingCode;
-
-
+    refStatusEl.innerText = "🎉 Referral applied: " + incomingCode;
+    userData.referredBy = incomingCode;
+  } catch (err) {
+    console.error(err);
+    refStatusEl.innerText = "Referral detected: " + incomingCode;
+  }
 }
 
-
-/* =====================================================
-   WATCH AD
-===================================================== */
-
-watchBtn.addEventListener(
-  "click",
-  async function() {
-
-    watchBtn.disabled = true;
-
-
-    showMessage(
-      "⏳ Opening advertisement..."
-    );
-
-
-    try {
-
-      if (
-        typeof show_11563642 !==
-        "function"
-      ) {
-
-        throw new Error(
-          "Monetag SDK not loaded"
-        );
-
-      }
-
-
-      const result =
-        await show_11563642();
-
-
-      console.log(
-        "Ad result:",
-        result
-      );
-
-
-      /*
-        IMPORTANT:
-
-        Do not credit real money here.
-
-        Monetag reward verification must be
-        handled through a trusted mechanism.
-      */
-
-
-      showMessage(
-        "✅ Ad completed. Reward verification pending."
-      );
-
-
-    } catch (error) {
-
-      console.error(
-        error
-      );
-
-
-      showMessage(
-        "❌ Advertisement failed."
-      );
-
-    }
-
-
-    watchBtn.disabled = false;
-
+/* ===================== WATCH AD ===================== */
+watchBtn.addEventListener("click", async () => {
+  if (!currentUser || !userData) {
+    showMessage("⏳ Please wait, connecting...");
+    return;
   }
-);
 
+  watchBtn.disabled = true;
+  showMessage("⏳ Opening advertisement...");
 
-/* =====================================================
-   DAILY CHECK-IN
-===================================================== */
-
-checkinBtn.addEventListener(
-  "click",
-  function() {
-
-    if (!currentUser) {
-
-      showMessage(
-        "⏳ Connecting..."
-      );
-
-      return;
-
+  try {
+    if (typeof show_11563642 !== "function") {
+      throw new Error("Monetag SDK not loaded");
     }
 
+    const result = await show_11563642();
+    console.log("Ad result:", result);
 
-    if (!userData) {
+    // অ্যাড রিওয়ার্ড = ১ টাকা
+    const reward = 1.00;
+    const userRef = doc(db, "users", currentUser.uid);
 
-      showMessage(
-        "⏳ Account profile is pending."
-      );
+    await updateDoc(userRef, {
+      balance: increment(reward)
+    });
 
-      return;
+    userData.balance = (userData.balance || 0) + reward;
+    updateUI();
+    showMessage(`✅ Ad completed! +₹${reward.toFixed(2)} added`);
 
-    }
-
-
-    if (todayCheckin) {
-
-      showMessage(
-        "✅ Already checked in today."
-      );
-
-      return;
-
-    }
-
-
-    /*
-      Strict rules intentionally prevent
-      client-side balance manipulation.
-
-      Therefore this button creates no
-      fake money credit.
-    */
-
-
-    showMessage(
-      "📅 Check-in recorded as pending verification."
-    );
-
+  } catch (error) {
+    console.error(error);
+    showMessage("❌ Advertisement failed or closed.");
   }
-);
 
+  watchBtn.disabled = false;
+});
 
-/* =====================================================
-   COPY REFERRAL LINK
-===================================================== */
-
-copyBtn.addEventListener(
-  "click",
-  async function() {
-
-    if (
-      !referralCode ||
-      referralCode === "PENDING"
-    ) {
-
-      showMessage(
-        "Referral code is not ready yet."
-      );
-
-      return;
-
-    }
-
-
-    const link =
-      "https://t.me/" +
-      TELEGRAM_BOT +
-      "?startapp=" +
-      referralCode;
-
-
-    try {
-
-      await navigator.clipboard.writeText(
-        link
-      );
-
-
-      showMessage(
-        "📋 Telegram referral link copied!"
-      );
-
-    } catch (error) {
-
-      showMessage(
-        link
-      );
-
-    }
-
+/* ===================== DAILY CHECK-IN ===================== */
+checkinBtn.addEventListener("click", async () => {
+  if (!currentUser || !userData) {
+    showMessage("⏳ Connecting...");
+    return;
   }
-);
 
-
-/* =====================================================
-   WITHDRAWAL REQUEST
-===================================================== */
-
-withdrawBtn.addEventListener(
-  "click",
-  async function() {
-
-    if (!currentUser) {
-
-      showMessage(
-        "⏳ Connecting..."
-      );
-
-      return;
-
-    }
-
-
-    const method =
-      document.getElementById(
-        "paymentMethod"
-      ).value;
-
-
-    const detail =
-      document.getElementById(
-        "paymentDetail"
-      ).value.trim();
-
-
-    const amount =
-      Number(
-        document.getElementById(
-          "withdrawAmount"
-        ).value
-      );
-
-
-    const availableBalance =
-      Number(
-        userData?.balance || 0
-      );
-
-
-    if (!detail) {
-
-      showMessage(
-        "❌ Enter payment details."
-      );
-
-      return;
-
-    }
-
-
-    if (
-      !Number.isFinite(amount) ||
-      amount < 250
-    ) {
-
-      showMessage(
-        "❌ Minimum withdrawal is ₹250."
-      );
-
-      return;
-
-    }
-
-
-    if (
-      amount > availableBalance
-    ) {
-
-      showMessage(
-        "❌ Insufficient balance."
-      );
-
-      return;
-
-    }
-
-
-    withdrawBtn.disabled = true;
-
-
-    try {
-
-      await addDoc(
-        collection(
-          db,
-          "withdrawalRequests"
-        ),
-        {
-
-          uid:
-            currentUser.uid,
-
-          amount:
-            amount,
-
-          method:
-            method,
-
-          paymentDetail:
-            detail,
-
-          status:
-            "pending",
-
-          createdAt:
-            serverTimestamp()
-
-        }
-      );
-
-
-      showMessage(
-        "✅ Withdrawal request submitted."
-      );
-
-
-      document.getElementById(
-        "paymentDetail"
-      ).value = "";
-
-
-      document.getElementById(
-        "withdrawAmount"
-      ).value = "";
-
-
-    } catch (error) {
-
-      console.error(
-        error
-      );
-
-
-      showMessage(
-        "❌ Withdrawal request failed."
-      );
-
-    }
-
-
-    withdrawBtn.disabled = false;
-
+  if (todayCheckin) {
+    showMessage("✅ Already checked in today.");
+    return;
   }
-);
 
+  checkinBtn.disabled = true;
+  showMessage("⏳ Processing check-in...");
 
-/* =====================================================
-   ANONYMOUS AUTH
-===================================================== */
+  try {
+    const today = new Date().toDateString();
+    // Daily Check-in রিওয়ার্ড = ১০ টাকা
+    const reward = 10.00;
+    const userRef = doc(db, "users", currentUser.uid);
 
-signInAnonymously(auth)
+    await updateDoc(userRef, {
+      balance: increment(reward),
+      lastCheckIn: today
+    });
 
-  .catch(
-    function(error) {
+    userData.balance = (userData.balance || 0) + reward;
+    userData.lastCheckIn = today;
+    todayCheckin = true;
 
-      console.error(
-        error
-      );
-
-
-      firebaseStatus.innerText =
-        "🔴 Firebase authentication failed";
-
-
-      showMessage(
-        "❌ Firebase authentication failed."
-      );
-
-    }
-  );
-
-
-/* =====================================================
-   AUTH STATE
-===================================================== */
-
-onAuthStateChanged(
-  auth,
-  function(user) {
-
-    if (!user) {
-      return;
-    }
-
-
-    loadUser(user)
-      .catch(
-        function(error) {
-
-          console.error(
-            error
-          );
-
-
-          firebaseStatus.innerText =
-            "🔴 Could not load Firebase profile";
-
-
-          showMessage(
-            "❌ Could not load account."
-          );
-
-        }
-      );
-
+    updateUI();
+    showMessage(`✅ Check-in successful! +₹${reward.toFixed(2)}`);
+  } catch (error) {
+    console.error(error);
+    showMessage("❌ Check-in failed.");
+    checkinBtn.disabled = false;
   }
-);
+});
 
+/* ===================== COPY REFERRAL ===================== */
+copyBtn.addEventListener("click", async () => {
+  if (!referralCode) {
+    showMessage("Referral code not ready.");
+    return;
+  }
+
+  const link = `https://t.me/\( {TELEGRAM_BOT}?startapp= \){referralCode}`;
+
+  try {
+    await navigator.clipboard.writeText(link);
+    showMessage("📋 Referral link copied!");
+  } catch (e) {
+    showMessage(link);
+  }
+});
+
+/* ===================== WITHDRAW ===================== */
+withdrawBtn.addEventListener("click", async () => {
+  if (!currentUser || !userData) {
+    showMessage("⏳ Connecting...");
+    return;
+  }
+
+  const method = document.getElementById("paymentMethod").value;
+  const detail = document.getElementById("paymentDetail").value.trim();
+  const amount = Number(document.getElementById("withdrawAmount").value);
+  const available = Number(userData.balance || 0);
+
+  if (!detail) {
+    showMessage("❌ Enter payment details.");
+    return;
+  }
+  if (!Number.isFinite(amount) || amount < 250) {
+    showMessage("❌ Minimum withdrawal is ₹250.");
+    return;
+  }
+  if (amount > available) {
+    showMessage("❌ Insufficient balance.");
+    return;
+  }
+
+  withdrawBtn.disabled = true;
+  showMessage("⏳ Submitting request...");
+
+  try {
+    await addDoc(collection(db, "withdrawalRequests"), {
+      uid: currentUser.uid,
+      amount: amount,
+      method: method,
+      paymentDetail: detail,
+      status: "pending",
+      createdAt: serverTimestamp()
+    });
+
+    const userRef = doc(db, "users", currentUser.uid);
+    await updateDoc(userRef, {
+      balance: increment(-amount)
+    });
+
+    userData.balance = available - amount;
+    updateUI();
+
+    document.getElementById("paymentDetail").value = "";
+    document.getElementById("withdrawAmount").value = "";
+    showMessage("✅ Withdrawal request submitted!");
+  } catch (error) {
+    console.error(error);
+    showMessage("❌ Withdrawal request failed.");
+  }
+
+  withdrawBtn.disabled = false;
+});
+
+/* ===================== AUTH ===================== */
+signInAnonymously(auth).catch((error) => {
+  console.error(error);
+  firebaseStatus.innerText = "🔴 Auth failed";
+  showMessage("❌ Firebase authentication failed.");
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) return;
+
+  loadUser(user).catch((error) => {
+    console.error(error);
+    firebaseStatus.innerText = "🔴 Profile load failed";
+    showMessage("❌ Could not load account.");
+  });
+});
 </script>
-
 </body>
 </html>
